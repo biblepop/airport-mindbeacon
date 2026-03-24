@@ -4,6 +4,7 @@ import StatCards from "./components/StatCards";
 import ComparisonSection from "./components/ComparisonSection";
 import FlowSection from "./components/FlowSection";
 import DashboardSection from "./components/DashboardSection";
+import CalmRoomSection from "./components/CalmRoomSection";
 import WorkerMonitor from "./components/WorkerMonitor";
 import TodayStats from "./components/TodayStats";
 import Footer from "./components/Footer";
@@ -17,6 +18,7 @@ export default function Home() {
       <ComparisonSection />
       <FlowSection />
       <DashboardSection />
+      <CalmRoomSection />
       <WorkerMonitor />
       <TodayStats />
       <Footer />

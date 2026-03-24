@@ -41,6 +41,10 @@ const LEVEL_COLOR: Record<string, string> = {
   즉각: "#ef4444",
 };
 
+function scrollToCalmRoom() {
+  document.getElementById("calm-room")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function generateLog(id: number): LogEntry {
   const zones = [
     "T1 출국장 1구역",
@@ -55,6 +59,7 @@ function generateLog(id: number): LogEntry {
     "앱 푸시 전송 완료",
     "직원 파견 요청",
     "심리안정 콘텐츠 제공",
+    "심리안정실 안내",
     "케어 완료 확인",
     "AI 모니터링 중",
   ];
@@ -264,7 +269,17 @@ export default function DashboardSection() {
                     <div className="text-xs font-medium text-gray-700 truncate">
                       {log.zone}
                     </div>
-                    <div className="text-xs text-gray-400">{log.action}</div>
+                    {log.action === "심리안정실 안내" ? (
+                      <button
+                        onClick={scrollToCalmRoom}
+                        className="text-xs font-semibold underline underline-offset-2 transition-opacity hover:opacity-70"
+                        style={{ color: "#00AAB5" }}
+                      >
+                        📍 심리안정실 안내 →
+                      </button>
+                    ) : (
+                      <div className="text-xs text-gray-400">{log.action}</div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -297,12 +312,13 @@ export default function DashboardSection() {
               </div>
               <div className="text-xs text-gray-500 leading-relaxed">
                 인천공항 마음안정실이 가까이 있어요. 잠깐의 휴식이 여행을 더 편안하게 만들어 드려요.
-                <span
-                  className="block mt-1 font-medium"
+                <button
+                  onClick={scrollToCalmRoom}
+                  className="block mt-1 font-semibold text-left underline underline-offset-2 hover:opacity-70 transition-opacity"
                   style={{ color: "#00AAB5" }}
                 >
                   → 3층 중앙구역 심리안정실 안내 보기
-                </span>
+                </button>
               </div>
             </div>
           </div>

@@ -10,32 +10,64 @@ interface CongestionItem {
 
 export default function StatCards() {
   const [totalPax, setTotalPax] = useState<number | null>(null);
+  const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/congestion")
       .then((r) => r.json())
       .then((data) => {
+        console.log("[StatCards] raw API response:", data);
+
+        const isMockData = data?._mock === true;
+        setIsMock(isMockData);
+
+        if (data?._error) {
+          console.warn("[StatCards] API error flag:", data._error);
+          setError(data._error);
+        }
+
         const items: CongestionItem[] =
-          data?.response?.body?.items?.item || data?.items || [];
+          data?.response?.body?.items?.item ||
+          data?.items ||
+          [];
+
+        console.log("[StatCards] parsed items:", items);
+
         const total = items.reduce(
-          (sum: number, item: CongestionItem) => sum + (item.passengerNum || 0),
+          (sum: number, item: CongestionItem) => sum + (item.passengerNum ?? 0),
           0
         );
-        setTotalPax(total || 12430);
+
+        console.log("[StatCards] total passengers:", total, "| isMock:", isMockData);
+        setTotalPax(total);
       })
-      .catch(() => setTotalPax(12430))
+      .catch((err) => {
+        console.error("[StatCards] fetch failed:", err);
+        setError(String(err));
+        setTotalPax(null);
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const paxDisplay = loading ? "—" : totalPax === null ? "오류" : totalPax.toLocaleString();
 
   const cards = [
     {
       label: "현재 터미널 내 여객",
-      value: loading ? "—" : (totalPax ?? 0).toLocaleString(),
+      value: paxDisplay,
       unit: "명",
       color: "#00AAB5",
       icon: "✈",
-      sub: "실시간 API 데이터",
+      sub: loading
+        ? "조회 중…"
+        : error && totalPax === null
+        ? "API 오류"
+        : isMock
+        ? "⚠ 시뮬레이션 데이터"
+        : "실시간 API 데이터",
+      subColor: isMock && !loading ? "#F99D1B" : undefined,
     },
     {
       label: "불안 감지 여객",
@@ -90,7 +122,12 @@ export default function StatCards() {
               </span>
               <span className="text-base text-gray-400 mb-0.5">{c.unit}</span>
             </div>
-            <p className="text-xs text-gray-400 mt-1">{c.sub}</p>
+            <p
+              className="text-xs mt-1"
+              style={{ color: c.subColor ?? "#9ca3af" }}
+            >
+              {c.sub}
+            </p>
           </div>
         ))}
       </div>

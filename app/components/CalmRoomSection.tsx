@@ -1,8 +1,7 @@
 export default function CalmRoomSection() {
   return (
     <section
-      id="calm-room"
-      className="max-w-screen-xl mx-auto px-6 pb-8 scroll-mt-20"
+      className="max-w-screen-xl mx-auto px-6 pb-8"
     >
       <div className="flex items-center gap-2 mb-5">
         <h2 className="text-xl font-bold text-airport-black">

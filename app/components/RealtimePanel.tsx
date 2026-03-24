@@ -1,0 +1,166 @@
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+
+interface CongestionItem {
+  aicpName?: string;
+  congestNm?: string;
+  passengerNum?: number;
+}
+
+interface HourlyItem {
+  hour: string;
+  t1Passenger: number;
+  t2Passenger: number;
+}
+
+const STATUS_COLOR: Record<string, string> = {
+  원활: "#00AAB5",
+  보통: "#F99D1B",
+  혼잡: "#ef4444",
+};
+
+const STATUS_BG: Record<string, string> = {
+  원활: "rgba(0,170,181,0.08)",
+  보통: "rgba(249,157,27,0.1)",
+  혼잡: "rgba(239,68,68,0.08)",
+};
+
+const MOCK_ZONES: CongestionItem[] = [
+  { aicpName: "T1 출국장 1구역", congestNm: "원활", passengerNum: 1240 },
+  { aicpName: "T1 출국장 2구역", congestNm: "보통", passengerNum: 2180 },
+  { aicpName: "T1 출국장 3구역", congestNm: "혼잡", passengerNum: 3450 },
+  { aicpName: "T2 출국장 1구역", congestNm: "원활", passengerNum: 980 },
+  { aicpName: "T2 출국장 2구역", congestNm: "보통", passengerNum: 1760 },
+  { aicpName: "T2 출국장 3구역", congestNm: "원활", passengerNum: 820 },
+];
+
+export default function RealtimePanel() {
+  const [zones, setZones] = useState<CongestionItem[]>([]);
+  const [hourly, setHourly] = useState<HourlyItem[]>([]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [cRes, pRes] = await Promise.all([
+        fetch("/api/congestion"),
+        fetch("/api/passenger"),
+      ]);
+      const cData = await cRes.json();
+      const pData = await pRes.json();
+
+      const items: CongestionItem[] =
+        cData?.response?.body?.items?.item || cData?.items || [];
+      if (items.length > 0) setZones(items.slice(0, 6));
+
+      const hourlyItems: HourlyItem[] = pData?.items || [];
+      if (hourlyItems.length > 0) setHourly(hourlyItems);
+    } catch {
+      // fallback to mock
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    const id = setInterval(fetchData, 60000);
+    return () => clearInterval(id);
+  }, [fetchData]);
+
+  const displayZones = zones.length > 0 ? zones : MOCK_ZONES;
+
+  const mockHourly: HourlyItem[] = Array.from({ length: 12 }, (_, i) => ({
+    hour: `${String(i * 2).padStart(2, "0")}:00`,
+    t1Passenger: Math.floor(800 + Math.random() * 3500),
+    t2Passenger: Math.floor(600 + Math.random() * 2800),
+  }));
+  const displayHourly = hourly.length > 0 ? hourly.slice(0, 12) : mockHourly;
+  const maxPax = Math.max(...displayHourly.map((h) => h.t1Passenger + h.t2Passenger), 1);
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* CCTV 구역 */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-gray-800">CCTV 감지 구역 현황</h3>
+          <span className="text-xs text-gray-400">6개 구역 · 1분 갱신</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {displayZones.map((z, i) => {
+            const status = z.congestNm || "원활";
+            return (
+              <div
+                key={i}
+                className="rounded-xl p-4 border"
+                style={{
+                  backgroundColor: STATUS_BG[status] || "rgba(0,170,181,0.05)",
+                  borderColor: `${STATUS_COLOR[status] || "#00AAB5"}30`,
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-gray-600 truncate">
+                    {z.aicpName || `구역 ${i + 1}`}
+                  </span>
+                  <span
+                    className="text-xs font-bold"
+                    style={{ color: STATUS_COLOR[status] || "#00AAB5" }}
+                  >
+                    {status}
+                  </span>
+                </div>
+                <div className="text-xl font-bold tabular-nums text-gray-800">
+                  {(z.passengerNum || 0).toLocaleString()}
+                  <span className="text-xs font-normal text-gray-400 ml-1">명</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 시간대별 혼잡도 차트 */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-gray-800">시간대별 혼잡도</h3>
+          <span className="text-xs text-gray-400">2026.03.23 기준</span>
+        </div>
+        <div className="flex items-end gap-1" style={{ height: 128 }}>
+          {displayHourly.map((h, i) => {
+            const total = h.t1Passenger + h.t2Passenger;
+            const pct = Math.round((total / maxPax) * 100);
+            return (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex flex-col items-center justify-end" style={{ height: 104 }}>
+                  <div
+                    className="w-full rounded-t-sm transition-all duration-300"
+                    style={{
+                      height: `${pct}%`,
+                      backgroundColor:
+                        pct > 70 ? "#ef4444" : pct > 40 ? "#F99D1B" : "#00AAB5",
+                    }}
+                  />
+                </div>
+                <span className="text-[8px] text-gray-400 tabular-nums leading-none">
+                  {h.hour}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex gap-4 mt-3 text-xs text-gray-500">
+          {[
+            { label: "원활", color: "#00AAB5" },
+            { label: "보통", color: "#F99D1B" },
+            { label: "혼잡", color: "#ef4444" },
+          ].map((l) => (
+            <span key={l.label} className="flex items-center gap-1.5">
+              <span
+                className="w-2 h-2 rounded-sm inline-block flex-shrink-0"
+                style={{ background: l.color }}
+              />
+              {l.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

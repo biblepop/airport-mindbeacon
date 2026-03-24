@@ -26,9 +26,14 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
         },
+        fadeIn: {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         blink: "blink 1.2s step-start infinite",
+        fadeIn: "fadeIn 0.22s ease-out",
       },
     },
   },

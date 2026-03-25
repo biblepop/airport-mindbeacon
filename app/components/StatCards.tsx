@@ -2,13 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-interface CongestionItem {
-  gateId?: string;
-  terminalId?: string;
-  waitTime?: string;
-  waitLength?: string;
-  occurtime?: string;
-}
 
 export default function StatCards() {
   const [totalWaitLength, setTotalWaitLength] = useState<number | null>(null);
@@ -18,26 +11,32 @@ export default function StatCards() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/congestion")
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("[StatCards] raw API response:", data);
+    function fetchData() {
+      fetch("/api/congestion")
+        .then((r) => r.json())
+        .then((data) => {
+          console.log("[StatCards] raw API response:", data);
 
-        setIsMock(data?._mock === true);
-        setIsOffHours(data?._offHours === true);
+          setIsMock(data?._mock === true);
+          setIsOffHours(data?._offHours === true);
 
-        if (data?._error) setError(data._error);
+          if (data?._error) setError(data._error);
 
-        const total: number = data?.totalWaitLength ?? 0;
-        console.log("[StatCards] totalWaitLength:", total, "| isMock:", data?._mock);
-        setTotalWaitLength(total);
-      })
-      .catch((err) => {
-        console.error("[StatCards] fetch failed:", err);
-        setError(String(err));
-        setTotalWaitLength(null);
-      })
-      .finally(() => setLoading(false));
+          const total: number = data?.totalWaitLength ?? 0;
+          console.log("[StatCards] totalWaitLength:", total, "| isMock:", data?._mock);
+          setTotalWaitLength(total);
+        })
+        .catch((err) => {
+          console.error("[StatCards] fetch failed:", err);
+          setError(String(err));
+          setTotalWaitLength(null);
+        })
+        .finally(() => setLoading(false));
+    }
+
+    fetchData();
+    const id = setInterval(fetchData, 60000);
+    return () => clearInterval(id);
   }, []);
 
   const paxDisplay = loading

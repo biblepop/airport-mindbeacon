@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 
 interface CongestionItem {
   gateId?: string;
@@ -47,32 +47,36 @@ const MOCK_ZONES: CongestionItem[] = [
 export default function RealtimePanel() {
   const [zones, setZones] = useState<CongestionItem[]>([]);
   const [hourly, setHourly] = useState<HourlyItem[]>([]);
-
-  const fetchData = useCallback(async () => {
-    try {
-      const [cRes, pRes] = await Promise.all([
-        fetch("/api/congestion"),
-        fetch("/api/passenger"),
-      ]);
-      const cData = await cRes.json();
-      const pData = await pRes.json();
-
-      const items: CongestionItem[] =
-        cData?.response?.body?.items?.item || [];
-      if (items.length > 0) setZones(items.slice(0, 6));
-
-      const hourlyItems: HourlyItem[] = pData?.items || [];
-      if (hourlyItems.length > 0) setHourly(hourlyItems);
-    } catch {
-      // fallback to mock
-    }
-  }, []);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    async function fetchData() {
+      setRefreshing(true);
+      try {
+        const [cRes, pRes] = await Promise.all([
+          fetch("/api/congestion"),
+          fetch("/api/passenger"),
+        ]);
+        const cData = await cRes.json();
+        const pData = await pRes.json();
+
+        const items: CongestionItem[] =
+          cData?.response?.body?.items?.item || [];
+        if (items.length > 0) setZones(items.slice(0, 6));
+
+        const hourlyItems: HourlyItem[] = pData?.items || [];
+        if (hourlyItems.length > 0) setHourly(hourlyItems);
+      } catch {
+        // fallback to mock
+      } finally {
+        setRefreshing(false);
+      }
+    }
+
     fetchData();
     const id = setInterval(fetchData, 60000);
     return () => clearInterval(id);
-  }, [fetchData]);
+  }, []);
 
   const displayZones = zones.length > 0 ? zones : MOCK_ZONES;
 
@@ -95,7 +99,7 @@ export default function RealtimePanel() {
           <h3 className="font-bold text-gray-800">출국장 대기 현황</h3>
           <span className="text-xs text-gray-400">T1 게이트 · 1분 갱신</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className={`grid grid-cols-2 md:grid-cols-3 gap-3 transition-opacity duration-300 ${refreshing ? "opacity-50" : "opacity-100"}`}>
           {displayZones.map((z, i) => {
             const status = getStatus(z.waitTime);
             const waitLen = parseInt(z.waitLength ?? "0", 10);

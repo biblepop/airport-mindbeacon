@@ -11,7 +11,7 @@ interface CongestionItem {
 }
 
 export default function StatCards() {
-  const [avgWait, setAvgWait] = useState<number | null>(null);
+  const [totalWaitLength, setTotalWaitLength] = useState<number | null>(null);
   const [isMock, setIsMock] = useState(false);
   const [isOffHours, setIsOffHours] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,33 +28,31 @@ export default function StatCards() {
 
         if (data?._error) setError(data._error);
 
-        // route.ts가 avgWaitTime을 직접 계산해서 반환
-        const avg: number = data?.avgWaitTime ?? 0;
-
-        console.log("[StatCards] avgWaitTime:", avg, "| isMock:", data?._mock);
-        setAvgWait(avg);
+        const total: number = data?.totalWaitLength ?? 0;
+        console.log("[StatCards] totalWaitLength:", total, "| isMock:", data?._mock);
+        setTotalWaitLength(total);
       })
       .catch((err) => {
         console.error("[StatCards] fetch failed:", err);
         setError(String(err));
-        setAvgWait(null);
+        setTotalWaitLength(null);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const waitDisplay = loading
+  const paxDisplay = loading
     ? "—"
     : isOffHours
     ? "—"
-    : avgWait === null
+    : totalWaitLength === null
     ? "오류"
-    : String(avgWait);
+    : totalWaitLength.toLocaleString();
 
-  const waitSub = loading
+  const paxSub = loading
     ? "조회 중…"
     : isOffHours
     ? "운영 외 시간"
-    : error && avgWait === null
+    : error && totalWaitLength === null
     ? "API 오류"
     : isMock
     ? "⚠ 시뮬레이션 데이터"
@@ -62,12 +60,12 @@ export default function StatCards() {
 
   const cards = [
     {
-      label: "출국장 평균 대기시간",
-      value: waitDisplay,
-      unit: waitDisplay === "—" ? "" : "분",
+      label: "현재 출국장 대기 인원",
+      value: paxDisplay,
+      unit: paxDisplay === "—" ? "" : "명",
       color: "#00AAB5",
       icon: "✈",
-      sub: waitSub,
+      sub: paxSub,
       subColor: isMock && !loading ? "#F99D1B" : isOffHours ? "#9ca3af" : undefined,
     },
     {

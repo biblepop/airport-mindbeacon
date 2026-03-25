@@ -50,6 +50,13 @@ function calcAvgWaitTime(items: GateItem[]): number {
   return Math.round(times.reduce((s, t) => s + t, 0) / times.length);
 }
 
+function calcTotalWaitLength(items: GateItem[]): number {
+  return items.reduce(
+    (sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0),
+    0
+  );
+}
+
 export async function GET() {
   const apiKey = process.env.AIRPORT_API_KEY;
 
@@ -72,11 +79,13 @@ export async function GET() {
     }
 
     const avgWaitTime = calcAvgWaitTime(items);
-    console.log(`[congestion] avgWaitTime: ${avgWaitTime}분`);
+    const totalWaitLength = calcTotalWaitLength(items);
+    console.log(`[congestion] avgWaitTime: ${avgWaitTime}분 / totalWaitLength: ${totalWaitLength}명`);
 
     return NextResponse.json({
       response: { body: { items: { item: items }, totalCount } },
       avgWaitTime,
+      totalWaitLength,
       _mock: false,
     });
   } catch (err) {
@@ -94,6 +103,7 @@ function mockResponse(error: string) {
       },
     },
     avgWaitTime: 9,
+    totalWaitLength: 185,
     _mock: true,
     _error: error,
   };

@@ -3,9 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 
 interface CongestionItem {
-  aicpName?: string;
-  congestNm?: string;
-  passengerNum?: number;
+  gateId?: string;
+  terminalId?: string;
+  waitTime?: string;
+  waitLength?: string;
+  occurtime?: string;
 }
 
 interface HourlyItem {
@@ -26,13 +28,20 @@ const STATUS_BG: Record<string, string> = {
   혼잡: "rgba(239,68,68,0.08)",
 };
 
+function getStatus(waitTime: string | undefined): string {
+  const t = parseInt(waitTime ?? "0", 10);
+  if (t >= 20) return "혼잡";
+  if (t >= 10) return "보통";
+  return "원활";
+}
+
 const MOCK_ZONES: CongestionItem[] = [
-  { aicpName: "T1 출국장 1구역", congestNm: "원활", passengerNum: 1240 },
-  { aicpName: "T1 출국장 2구역", congestNm: "보통", passengerNum: 2180 },
-  { aicpName: "T1 출국장 3구역", congestNm: "혼잡", passengerNum: 3450 },
-  { aicpName: "T2 출국장 1구역", congestNm: "원활", passengerNum: 980 },
-  { aicpName: "T2 출국장 2구역", congestNm: "보통", passengerNum: 1760 },
-  { aicpName: "T2 출국장 3구역", congestNm: "원활", passengerNum: 820 },
+  { gateId: "DG1_E", terminalId: "P01", waitTime: "5", waitLength: "12" },
+  { gateId: "DG2_E", terminalId: "P01", waitTime: "12", waitLength: "35" },
+  { gateId: "DG3_E", terminalId: "P01", waitTime: "22", waitLength: "68" },
+  { gateId: "DG4_W", terminalId: "P01", waitTime: "3", waitLength: "8" },
+  { gateId: "DG5_W", terminalId: "P01", waitTime: "15", waitLength: "42" },
+  { gateId: "DG6_W", terminalId: "P01", waitTime: "7", waitLength: "20" },
 ];
 
 export default function RealtimePanel() {
@@ -49,7 +58,7 @@ export default function RealtimePanel() {
       const pData = await pRes.json();
 
       const items: CongestionItem[] =
-        cData?.response?.body?.items?.item || cData?.items || [];
+        cData?.response?.body?.items?.item || [];
       if (items.length > 0) setZones(items.slice(0, 6));
 
       const hourlyItems: HourlyItem[] = pData?.items || [];
@@ -73,19 +82,24 @@ export default function RealtimePanel() {
     t2Passenger: Math.floor(600 + Math.random() * 2800),
   }));
   const displayHourly = hourly.length > 0 ? hourly.slice(0, 12) : mockHourly;
-  const maxPax = Math.max(...displayHourly.map((h) => h.t1Passenger + h.t2Passenger), 1);
+  const maxPax = Math.max(
+    ...displayHourly.map((h) => h.t1Passenger + h.t2Passenger),
+    1
+  );
 
   return (
     <div className="flex flex-col gap-5">
       {/* CCTV 구역 */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-gray-800">CCTV 감지 구역 현황</h3>
-          <span className="text-xs text-gray-400">6개 구역 · 1분 갱신</span>
+          <h3 className="font-bold text-gray-800">출국장 대기 현황</h3>
+          <span className="text-xs text-gray-400">T1 게이트 · 1분 갱신</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {displayZones.map((z, i) => {
-            const status = z.congestNm || "원활";
+            const status = getStatus(z.waitTime);
+            const waitLen = parseInt(z.waitLength ?? "0", 10);
+            const waitT = parseInt(z.waitTime ?? "0", 10);
             return (
               <div
                 key={i}
@@ -97,7 +111,7 @@ export default function RealtimePanel() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-gray-600 truncate">
-                    {z.aicpName || `구역 ${i + 1}`}
+                    {z.gateId || `게이트 ${i + 1}`}
                   </span>
                   <span
                     className="text-xs font-bold"
@@ -107,8 +121,11 @@ export default function RealtimePanel() {
                   </span>
                 </div>
                 <div className="text-xl font-bold tabular-nums text-gray-800">
-                  {(z.passengerNum || 0).toLocaleString()}
+                  {waitLen.toLocaleString()}
                   <span className="text-xs font-normal text-gray-400 ml-1">명</span>
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  대기 {waitT}분
                 </div>
               </div>
             );
@@ -120,7 +137,7 @@ export default function RealtimePanel() {
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-gray-800">시간대별 혼잡도</h3>
-          <span className="text-xs text-gray-400">2026.03.23 기준</span>
+          <span className="text-xs text-gray-400">2026.03.25 기준</span>
         </div>
         <div className="flex items-end gap-1" style={{ height: 128 }}>
           {displayHourly.map((h, i) => {
@@ -128,7 +145,10 @@ export default function RealtimePanel() {
             const pct = Math.round((total / maxPax) * 100);
             return (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex flex-col items-center justify-end" style={{ height: 104 }}>
+                <div
+                  className="w-full flex flex-col items-center justify-end"
+                  style={{ height: 104 }}
+                >
                   <div
                     className="w-full rounded-t-sm transition-all duration-300"
                     style={{

@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 
 interface CongestionItem {
-  aicpName?: string;
-  congestNm?: string;
-  passengerNum?: number;
+  gateId?: string;
+  terminalId?: string;
+  waitTime?: string;
+  waitLength?: string;
+  occurtime?: string;
 }
 
 export default function StatCards() {
-  const [totalPax, setTotalPax] = useState<number | null>(null);
+  const [avgWait, setAvgWait] = useState<number | null>(null);
   const [isMock, setIsMock] = useState(false);
+  const [isOffHours, setIsOffHours] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,54 +23,63 @@ export default function StatCards() {
       .then((data) => {
         console.log("[StatCards] raw API response:", data);
 
-        const isMockData = data?._mock === true;
-        setIsMock(isMockData);
+        setIsMock(data?._mock === true);
+        setIsOffHours(data?._offHours === true);
 
-        if (data?._error) {
-          console.warn("[StatCards] API error flag:", data._error);
-          setError(data._error);
-        }
+        if (data?._error) setError(data._error);
 
         const items: CongestionItem[] =
-          data?.response?.body?.items?.item ||
-          data?.items ||
-          [];
+          data?.response?.body?.items?.item || [];
 
         console.log("[StatCards] parsed items:", items);
 
-        const total = items.reduce(
-          (sum: number, item: CongestionItem) => sum + (item.passengerNum ?? 0),
-          0
-        );
+        const times = items
+          .map((item) => parseInt(item.waitTime ?? "0", 10))
+          .filter((t) => !isNaN(t) && t > 0);
 
-        console.log("[StatCards] total passengers:", total, "| isMock:", isMockData);
-        setTotalPax(total);
+        const avg =
+          times.length > 0
+            ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
+            : 0;
+
+        console.log("[StatCards] avgWaitTime:", avg, "| isMock:", data?._mock);
+        setAvgWait(avg);
       })
       .catch((err) => {
         console.error("[StatCards] fetch failed:", err);
         setError(String(err));
-        setTotalPax(null);
+        setAvgWait(null);
       })
       .finally(() => setLoading(false));
   }, []);
 
-  const paxDisplay = loading ? "—" : totalPax === null ? "오류" : totalPax.toLocaleString();
+  const waitDisplay = loading
+    ? "—"
+    : isOffHours
+    ? "—"
+    : avgWait === null
+    ? "오류"
+    : String(avgWait);
+
+  const waitSub = loading
+    ? "조회 중…"
+    : isOffHours
+    ? "운영 외 시간"
+    : error && avgWait === null
+    ? "API 오류"
+    : isMock
+    ? "⚠ 시뮬레이션 데이터"
+    : "실시간 API 데이터";
 
   const cards = [
     {
-      label: "현재 터미널 내 여객",
-      value: paxDisplay,
-      unit: "명",
+      label: "출국장 평균 대기시간",
+      value: waitDisplay,
+      unit: waitDisplay === "—" ? "" : "분",
       color: "#00AAB5",
       icon: "✈",
-      sub: loading
-        ? "조회 중…"
-        : error && totalPax === null
-        ? "API 오류"
-        : isMock
-        ? "⚠ 시뮬레이션 데이터"
-        : "실시간 API 데이터",
-      subColor: isMock && !loading ? "#F99D1B" : undefined,
+      sub: waitSub,
+      subColor: isMock && !loading ? "#F99D1B" : isOffHours ? "#9ca3af" : undefined,
     },
     {
       label: "불안 감지 여객",

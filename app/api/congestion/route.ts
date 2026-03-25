@@ -1,5 +1,34 @@
 import { NextResponse } from "next/server";
 
+const BASE_URL =
+  "https://apis.data.go.kr/B551177/StatusOfCongestion/getStatusOfCongestion";
+
+function buildUrl(apiKey: string, terminalId: string) {
+  return (
+    `${BASE_URL}?serviceKey=${apiKey}` +
+    `&numOfRows=20&pageNo=1&type=json&terminalId=${terminalId}`
+  );
+}
+
+async function fetchTerminal(apiKey: string, terminalId: string) {
+  const url = buildUrl(apiKey, terminalId);
+  console.log(`[congestion] 요청 URL (${terminalId}):`, url);
+
+  const res = await fetch(url, { cache: "no-store" });
+  const rawText = await res.text();
+  console.log(`[congestion] HTTP status (${terminalId}):`, res.status);
+  console.log(`[congestion] 응답 전체 (${terminalId}):\n`, rawText);
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} (terminalId=${terminalId})`);
+  }
+
+  const data = JSON.parse(rawText);
+  const items: unknown[] =
+    data?.response?.body?.items?.item ?? [];
+  return items;
+}
+
 export async function GET() {
   const apiKey = process.env.AIRPORT_API_KEY;
 
@@ -8,28 +37,22 @@ export async function GET() {
     return NextResponse.json(mockResponse("API key missing"));
   }
 
-  const url =
-    `https://apis.data.go.kr/B551177/StatusOfCongestion/getStatusOfCongestion` +
-    `?serviceKey=${apiKey}` +
-    `&numOfRows=20&pageNo=1&type=json`;
-
-  // ① 실제 요청 URL 전체 출력 (키 포함)
-  console.log("[congestion] 요청 URL:", url);
-
   try {
-    const res = await fetch(url, { cache: "no-store" });
+    const [t1Items, t2Items] = await Promise.all([
+      fetchTerminal(apiKey, "P01"),
+      fetchTerminal(apiKey, "P03"),
+    ]);
 
-    // ④ 응답 전체 출력
-    const rawText = await res.text();
-    console.log("[congestion] HTTP status:", res.status);
-    console.log("[congestion] 응답 전체:\n", rawText);
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    const data = JSON.parse(rawText);
-    return NextResponse.json({ ...data, _mock: false });
+    const allItems = [...t1Items, ...t2Items];
+    return NextResponse.json({
+      response: {
+        body: {
+          items: { item: allItems },
+          totalCount: allItems.length,
+        },
+      },
+      _mock: false,
+    });
   } catch (err) {
     console.error("[congestion] 실패:", err);
     return NextResponse.json(mockResponse(String(err)));

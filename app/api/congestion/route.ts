@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const BASE_URL =
-  "https://apis.data.go.kr/B551177/StatusOfCongestion/getStatusOfCongestion";
+  "https://apis.data.go.kr/B551177/statusOfDepartureCongestion/getDepartureCongestion";
 
 function buildUrl(apiKey: string, terminalId: string) {
   return (
@@ -38,12 +38,7 @@ export async function GET() {
   }
 
   try {
-    const [t1Items, t2Items] = await Promise.all([
-      fetchTerminal(apiKey, "P01"),
-      fetchTerminal(apiKey, "P03"),
-    ]);
-
-    const allItems = [...t1Items, ...t2Items];
+    const allItems = await fetchTerminal(apiKey, "P01");
     return NextResponse.json({
       response: {
         body: {

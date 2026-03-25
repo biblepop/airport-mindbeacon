@@ -3,6 +3,14 @@ import { NextResponse } from "next/server";
 const BASE_URL =
   "https://apis.data.go.kr/B551177/statusOfDepartureCongestion/getDepartureCongestion";
 
+interface GateItem {
+  gateId?: string;
+  terminalId?: string;
+  waitTime?: string;
+  waitLength?: string;
+  occurtime?: string;
+}
+
 function buildUrl(apiKey: string, terminalId: string) {
   return (
     `${BASE_URL}?serviceKey=${apiKey}` +
@@ -25,18 +33,21 @@ async function fetchTerminal(apiKey: string, terminalId: string) {
 
   const data = JSON.parse(rawText);
 
-  // 실제 필드명 확인용 — 응답 구조 전체 출력
-  console.log(
-    `[congestion] 파싱된 데이터 (${terminalId}):`,
-    JSON.stringify(data, null, 2)
-  );
-
-  const items: unknown[] = data?.response?.body?.items?.item ?? [];
-  const totalCount: number = data?.response?.body?.totalCount ?? 0;
+  // 실제 응답 구조: { header, body: { totalCount, items: [...] } }
+  const items: GateItem[] = data?.body?.items ?? [];
+  const totalCount: number = data?.body?.totalCount ?? 0;
 
   console.log(`[congestion] items 수 (${terminalId}):`, items.length, "/ totalCount:", totalCount);
 
   return { items, totalCount };
+}
+
+function calcAvgWaitTime(items: GateItem[]): number {
+  const times = items
+    .map((item) => parseInt(item.waitTime ?? "0", 10))
+    .filter((t) => !isNaN(t) && t > 0);
+  if (times.length === 0) return 0;
+  return Math.round(times.reduce((s, t) => s + t, 0) / times.length);
 }
 
 export async function GET() {
@@ -53,25 +64,19 @@ export async function GET() {
     if (items.length === 0 || totalCount === 0) {
       console.warn("[congestion] 데이터 없음 — 운영 외 시간으로 처리");
       return NextResponse.json({
-        response: {
-          body: {
-            items: { item: [] },
-            totalCount: 0,
-          },
-        },
+        response: { body: { items: { item: [] }, totalCount: 0 } },
         _mock: false,
         _offHours: true,
         _message: "운영 외 시간: 실시간 혼잡도 데이터가 제공되지 않습니다.",
       });
     }
 
+    const avgWaitTime = calcAvgWaitTime(items);
+    console.log(`[congestion] avgWaitTime: ${avgWaitTime}분`);
+
     return NextResponse.json({
-      response: {
-        body: {
-          items: { item: items },
-          totalCount,
-        },
-      },
+      response: { body: { items: { item: items }, totalCount } },
+      avgWaitTime,
       _mock: false,
     });
   } catch (err) {
@@ -88,16 +93,17 @@ function mockResponse(error: string) {
         totalCount: MOCK_ITEMS.length,
       },
     },
+    avgWaitTime: 9,
     _mock: true,
     _error: error,
   };
 }
 
-const MOCK_ITEMS = [
-  { aicpName: "T1 출국장 1구역", congestNm: "원활", passengerNum: 1240 },
-  { aicpName: "T1 출국장 2구역", congestNm: "보통", passengerNum: 2180 },
-  { aicpName: "T1 출국장 3구역", congestNm: "혼잡", passengerNum: 3450 },
-  { aicpName: "T2 출국장 1구역", congestNm: "원활", passengerNum: 980 },
-  { aicpName: "T2 출국장 2구역", congestNm: "보통", passengerNum: 1760 },
-  { aicpName: "T2 출국장 3구역", congestNm: "원활", passengerNum: 820 },
+const MOCK_ITEMS: GateItem[] = [
+  { gateId: "DG1_E", terminalId: "P01", waitTime: "5",  waitLength: "12" },
+  { gateId: "DG2_E", terminalId: "P01", waitTime: "12", waitLength: "35" },
+  { gateId: "DG3_E", terminalId: "P01", waitTime: "22", waitLength: "68" },
+  { gateId: "DG4_W", terminalId: "P01", waitTime: "3",  waitLength: "8"  },
+  { gateId: "DG5_W", terminalId: "P01", waitTime: "15", waitLength: "42" },
+  { gateId: "DG6_W", terminalId: "P01", waitTime: "7",  waitLength: "20" },
 ];

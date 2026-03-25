@@ -28,19 +28,8 @@ export default function StatCards() {
 
         if (data?._error) setError(data._error);
 
-        const items: CongestionItem[] =
-          data?.response?.body?.items?.item || [];
-
-        console.log("[StatCards] parsed items:", items);
-
-        const times = items
-          .map((item) => parseInt(item.waitTime ?? "0", 10))
-          .filter((t) => !isNaN(t) && t > 0);
-
-        const avg =
-          times.length > 0
-            ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
-            : 0;
+        // route.ts가 avgWaitTime을 직접 계산해서 반환
+        const avg: number = data?.avgWaitTime ?? 0;
 
         console.log("[StatCards] avgWaitTime:", avg, "| isMock:", data?._mock);
         setAvgWait(avg);

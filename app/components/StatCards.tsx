@@ -10,7 +10,7 @@ interface GateItem {
 }
 
 export default function StatCards() {
-  const [totalWaitLength, setTotalWaitLength] = useState<number>(0);
+  const [avgWaitTime, setAvgWaitTime] = useState<number>(0);
   const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -23,13 +23,16 @@ export default function StatCards() {
 
           setIsMock(data?._mock === true);
 
-          // route.ts 응답 구조: { body: { items: [...] }, totalPax }
           const items: GateItem[] = data?.body?.items ?? [];
-          const total: number = data?.totalPax ??
-            items.reduce((sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0), 0);
+          const times = items
+            .map((item) => parseInt(item.waitTime ?? "0", 10))
+            .filter((t) => t > 0);
+          const avg = times.length > 0
+            ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
+            : 0;
 
-          console.log("[StatCards] items:", items.length, "개 / totalPax:", total);
-          setTotalWaitLength(total);
+          console.log("[StatCards] items:", items.length, "개 / avgWaitTime:", avg);
+          setAvgWaitTime(avg);
         })
         .catch((err) => {
           console.error("[StatCards] fetch failed:", err);
@@ -42,8 +45,8 @@ export default function StatCards() {
     return () => clearInterval(id);
   }, []);
 
-  const paxDisplay = loading ? "—" : totalWaitLength.toLocaleString();
-  const paxSub = loading
+  const waitDisplay = loading ? "—" : String(avgWaitTime);
+  const waitSub = loading
     ? "조회 중…"
     : isMock
     ? "⚠ 시뮬레이션 데이터"
@@ -51,12 +54,12 @@ export default function StatCards() {
 
   const cards = [
     {
-      label: "현재 출국장 대기 인원",
-      value: paxDisplay,
-      unit: loading ? "" : "명",
+      label: "출국장 평균 대기시간",
+      value: waitDisplay,
+      unit: loading ? "" : "분",
       color: "#00AAB5",
       icon: "✈",
-      sub: paxSub,
+      sub: waitSub,
       subColor: isMock && !loading ? "#F99D1B" : undefined,
     },
     {

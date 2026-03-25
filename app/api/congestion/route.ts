@@ -42,21 +42,6 @@ async function fetchTerminal(apiKey: string, terminalId: string) {
   return { items, totalCount };
 }
 
-function calcAvgWaitTime(items: GateItem[]): number {
-  const times = items
-    .map((item) => parseInt(item.waitTime ?? "0", 10))
-    .filter((t) => !isNaN(t) && t > 0);
-  if (times.length === 0) return 0;
-  return Math.round(times.reduce((s, t) => s + t, 0) / times.length);
-}
-
-function calcTotalWaitLength(items: GateItem[]): number {
-  return items.reduce(
-    (sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0),
-    0
-  );
-}
-
 export async function GET() {
   const apiKey = process.env.AIRPORT_API_KEY;
 
@@ -68,24 +53,16 @@ export async function GET() {
   try {
     const { items, totalCount } = await fetchTerminal(apiKey, "P01");
 
-    if (items.length === 0 || totalCount === 0) {
-      console.warn("[congestion] 데이터 없음 — 운영 외 시간으로 처리");
-      return NextResponse.json({
-        response: { body: { items: { item: [] }, totalCount: 0 } },
-        _mock: false,
-        _offHours: true,
-        _message: "운영 외 시간: 실시간 혼잡도 데이터가 제공되지 않습니다.",
-      });
-    }
+    const totalPax = items.reduce(
+      (sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0),
+      0
+    );
+    console.log(`[congestion] totalPax: ${totalPax}명 / totalCount: ${totalCount}`);
 
-    const avgWaitTime = calcAvgWaitTime(items);
-    const totalWaitLength = calcTotalWaitLength(items);
-    console.log(`[congestion] avgWaitTime: ${avgWaitTime}분 / totalWaitLength: ${totalWaitLength}명`);
-
+    // 프론트에 { body: { items: [...], totalCount }, totalPax } 구조로 통일
     return NextResponse.json({
-      response: { body: { items: { item: items }, totalCount } },
-      avgWaitTime,
-      totalWaitLength,
+      body: { items, totalCount },
+      totalPax,
       _mock: false,
     });
   } catch (err) {
@@ -96,14 +73,8 @@ export async function GET() {
 
 function mockResponse(error: string) {
   return {
-    response: {
-      body: {
-        items: { item: MOCK_ITEMS },
-        totalCount: MOCK_ITEMS.length,
-      },
-    },
-    avgWaitTime: 9,
-    totalWaitLength: 185,
+    body: { items: MOCK_ITEMS, totalCount: MOCK_ITEMS.length },
+    totalPax: 185,
     _mock: true,
     _error: error,
   };

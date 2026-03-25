@@ -23,15 +23,12 @@ export default function StatCards() {
 
           setIsMock(data?._mock === true);
 
-          const items: GateItem[] =
-            data?.response?.body?.items?.item ?? [];
+          // route.ts 응답 구조: { body: { items: [...] }, totalPax }
+          const items: GateItem[] = data?.body?.items ?? [];
+          const total: number = data?.totalPax ??
+            items.reduce((sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0), 0);
 
-          const total = items.reduce(
-            (sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0),
-            0
-          );
-
-          console.log("[StatCards] items:", items.length, "개 / totalWaitLength:", total);
+          console.log("[StatCards] items:", items.length, "개 / totalPax:", total);
           setTotalWaitLength(total);
         })
         .catch((err) => {

@@ -60,8 +60,8 @@ export default function RealtimePanel() {
         const cData = await cRes.json();
         const pData = await pRes.json();
 
-        const items: CongestionItem[] =
-          cData?.response?.body?.items?.item ?? [];
+        // route.ts 응답 구조: { body: { items: [...] } }
+        const items: CongestionItem[] = cData?.body?.items ?? [];
         console.log("[RealtimePanel] congestion items:", items.length, "개");
         if (items.length > 0) setZones(items.slice(0, 6));
 

@@ -61,7 +61,8 @@ export default function RealtimePanel() {
         const pData = await pRes.json();
 
         const items: CongestionItem[] =
-          cData?.response?.body?.items?.item || [];
+          cData?.response?.body?.items?.item ?? [];
+        console.log("[RealtimePanel] congestion items:", items.length, "개");
         if (items.length > 0) setZones(items.slice(0, 6));
 
         const hourlyItems: HourlyItem[] = pData?.items || [];

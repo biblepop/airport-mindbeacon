@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 
 
+interface GateItem {
+  waitLength?: string;
+  waitTime?: string;
+  gateId?: string;
+}
+
 export default function StatCards() {
-  const [totalWaitLength, setTotalWaitLength] = useState<number | null>(null);
+  const [totalWaitLength, setTotalWaitLength] = useState<number>(0);
   const [isMock, setIsMock] = useState(false);
-  const [isOffHours, setIsOffHours] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     function fetchData() {
@@ -18,18 +22,20 @@ export default function StatCards() {
           console.log("[StatCards] raw API response:", data);
 
           setIsMock(data?._mock === true);
-          setIsOffHours(data?._offHours === true);
 
-          if (data?._error) setError(data._error);
+          const items: GateItem[] =
+            data?.response?.body?.items?.item ?? [];
 
-          const total: number = data?.totalWaitLength ?? 0;
-          console.log("[StatCards] totalWaitLength:", total, "| isMock:", data?._mock);
+          const total = items.reduce(
+            (sum, item) => sum + (parseInt(item.waitLength ?? "0", 10) || 0),
+            0
+          );
+
+          console.log("[StatCards] items:", items.length, "개 / totalWaitLength:", total);
           setTotalWaitLength(total);
         })
         .catch((err) => {
           console.error("[StatCards] fetch failed:", err);
-          setError(String(err));
-          setTotalWaitLength(null);
         })
         .finally(() => setLoading(false));
     }
@@ -39,20 +45,9 @@ export default function StatCards() {
     return () => clearInterval(id);
   }, []);
 
-  const paxDisplay = loading
-    ? "—"
-    : isOffHours
-    ? "—"
-    : totalWaitLength === null
-    ? "오류"
-    : totalWaitLength.toLocaleString();
-
+  const paxDisplay = loading ? "—" : totalWaitLength.toLocaleString();
   const paxSub = loading
     ? "조회 중…"
-    : isOffHours
-    ? "운영 외 시간"
-    : error && totalWaitLength === null
-    ? "API 오류"
     : isMock
     ? "⚠ 시뮬레이션 데이터"
     : "실시간 API 데이터";
@@ -61,11 +56,11 @@ export default function StatCards() {
     {
       label: "현재 출국장 대기 인원",
       value: paxDisplay,
-      unit: paxDisplay === "—" ? "" : "명",
+      unit: loading ? "" : "명",
       color: "#00AAB5",
       icon: "✈",
       sub: paxSub,
-      subColor: isMock && !loading ? "#F99D1B" : isOffHours ? "#9ca3af" : undefined,
+      subColor: isMock && !loading ? "#F99D1B" : undefined,
     },
     {
       label: "불안 감지 여객",

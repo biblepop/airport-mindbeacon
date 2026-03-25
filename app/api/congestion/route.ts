@@ -24,9 +24,19 @@ async function fetchTerminal(apiKey: string, terminalId: string) {
   }
 
   const data = JSON.parse(rawText);
-  const items: unknown[] =
-    data?.response?.body?.items?.item ?? [];
-  return items;
+
+  // 실제 필드명 확인용 — 응답 구조 전체 출력
+  console.log(
+    `[congestion] 파싱된 데이터 (${terminalId}):`,
+    JSON.stringify(data, null, 2)
+  );
+
+  const items: unknown[] = data?.response?.body?.items?.item ?? [];
+  const totalCount: number = data?.response?.body?.totalCount ?? 0;
+
+  console.log(`[congestion] items 수 (${terminalId}):`, items.length, "/ totalCount:", totalCount);
+
+  return { items, totalCount };
 }
 
 export async function GET() {
@@ -38,12 +48,28 @@ export async function GET() {
   }
 
   try {
-    const allItems = await fetchTerminal(apiKey, "P01");
+    const { items, totalCount } = await fetchTerminal(apiKey, "P01");
+
+    if (items.length === 0 || totalCount === 0) {
+      console.warn("[congestion] 데이터 없음 — 운영 외 시간으로 처리");
+      return NextResponse.json({
+        response: {
+          body: {
+            items: { item: [] },
+            totalCount: 0,
+          },
+        },
+        _mock: false,
+        _offHours: true,
+        _message: "운영 외 시간: 실시간 혼잡도 데이터가 제공되지 않습니다.",
+      });
+    }
+
     return NextResponse.json({
       response: {
         body: {
-          items: { item: allItems },
-          totalCount: allItems.length,
+          items: { item: items },
+          totalCount,
         },
       },
       _mock: false,

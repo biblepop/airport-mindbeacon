@@ -141,7 +141,7 @@ function GateBlock({ gate, isPulsing }: { gate: GateItem; isPulsing: boolean }) 
 }
 
 // ── 메인 ─────────────────────────────────────────────────────
-export default function AICarePanel() {
+export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void }) {
   const [depT1, setDepT1] = useState<GateItem[]>([]);
   const [depT2, setDepT2] = useState<GateItem[]>([]);
   const [totalPax, setTotalPax] = useState(0);
@@ -149,6 +149,7 @@ export default function AICarePanel() {
   const [pushIdx, setPushIdx] = useState(0);
   const [pushGate, setPushGate] = useState("DG4_W");
   const idRef = useRef(0);
+  const allGatesRef = useRef<GateItem[]>([]);
 
   // 출국장 데이터 fetch
   useEffect(() => {
@@ -173,35 +174,38 @@ export default function AICarePanel() {
   const displayT2 = depT2.length > 0 ? depT2 : MOCK_T2;
   const allGates  = [...displayT1, ...displayT2];
 
+  // ref를 항상 최신 gates로 유지
+  allGatesRef.current = allGates;
+
   // 초기 피드
   useEffect(() => {
-    const initial = Array.from({ length: 8 }, (_, i) => makeEvent(i, allGates));
+    const initial = Array.from({ length: 8 }, (_, i) => makeEvent(i, allGatesRef.current));
     setFeed(initial);
     idRef.current = 8;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 3초마다 이벤트 추가
+  // 3초마다 이벤트 추가 (ref 사용 → 항상 현재 gates + 현재 시각)
   useEffect(() => {
     const timer = setInterval(() => {
       idRef.current += 1;
-      const evt = makeEvent(idRef.current, allGates);
+      const evt = makeEvent(idRef.current, allGatesRef.current);
       setFeed(prev => [evt, ...prev.slice(0, 11)]);
     }, 3000);
     return () => clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allGates.length]);
+  }, []);
 
-  // 3초마다 앱 푸시 메시지 업데이트
+  // 3초마다 앱 푸시 메시지 업데이트 (ref 사용)
   useEffect(() => {
     const timer = setInterval(() => {
       setPushIdx(i => (i + 1) % PUSH_TEXTS.length);
-      const g = pick(allGates);
+      const g = pick(allGatesRef.current);
       setPushGate(g.gateId ?? "DG4_W");
     }, 3000);
     return () => clearInterval(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allGates.length]);
+  }, []);
 
   const monitoringPax = Math.max(1, Math.round((totalPax > 0 ? totalPax : 303) * 0.003));
 
@@ -320,6 +324,7 @@ export default function AICarePanel() {
               <button
                 className="flex-1 text-xs font-semibold py-2 rounded-lg text-white transition-opacity hover:opacity-80"
                 style={{backgroundColor:"#00AAB5"}}
+                onClick={onCalmRoom}
               >
                 안내 보기
               </button>

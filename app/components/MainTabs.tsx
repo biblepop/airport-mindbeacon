@@ -74,7 +74,7 @@ export default function MainTabs() {
                 AI가 먼저 찾아가는 능동형 심리안전 케어 · 실시간 모니터링
               </p>
             </div>
-            <AICarePanel />
+            <AICarePanel onCalmRoom={() => setActive("calmroom")} />
           </div>
         )}
 

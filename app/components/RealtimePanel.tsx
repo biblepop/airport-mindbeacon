@@ -126,11 +126,11 @@ export default function RealtimePanel() {
                   </span>
                 </div>
                 <div className="text-xl font-bold tabular-nums text-gray-800">
-                  {waitT}
-                  <span className="text-xs font-normal text-gray-400 ml-1">분</span>
+                  {waitLen}
+                  <span className="text-xs font-normal text-gray-400 ml-1">명</span>
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
-                  대기 인원 {waitLen}명
+                  대기시간 {waitT}분
                 </div>
               </div>
             );

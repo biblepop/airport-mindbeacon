@@ -10,7 +10,9 @@ interface GateItem {
 }
 
 export default function StatCards() {
-  const [avgWaitTime, setAvgWaitTime] = useState<number>(0);
+  const [displayValue, setDisplayValue] = useState<number>(0);
+  const [displayUnit, setDisplayUnit] = useState<string>("명");
+  const [cardLabel, setCardLabel] = useState<string>("출국장 대기 인원");
   const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -24,15 +26,30 @@ export default function StatCards() {
           setIsMock(data?._mock === true);
 
           const items: GateItem[] = data?.body?.items ?? [];
-          const times = items
-            .map((item) => parseInt(item.waitTime ?? "0", 10))
-            .filter((t) => t > 0);
-          const avg = times.length > 0
-            ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
-            : 0;
 
-          console.log("[StatCards] items:", items.length, "개 / avgWaitTime:", avg);
-          setAvgWaitTime(avg);
+          const totalWaitLength = items.reduce(
+            (s, item) => s + parseInt(item.waitLength ?? "0", 10),
+            0
+          );
+
+          if (totalWaitLength > 0) {
+            setDisplayValue(totalWaitLength);
+            setDisplayUnit("명");
+            setCardLabel("출국장 대기 인원");
+          } else {
+            const times = items
+              .map((item) => parseInt(item.waitTime ?? "0", 10))
+              .filter((t) => t > 0);
+            const avg =
+              times.length > 0
+                ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
+                : 0;
+            setDisplayValue(avg);
+            setDisplayUnit("분");
+            setCardLabel("출국장 평균 대기시간");
+          }
+
+          console.log("[StatCards] items:", items.length, "개 / totalWaitLength:", totalWaitLength);
         })
         .catch((err) => {
           console.error("[StatCards] fetch failed:", err);
@@ -45,7 +62,7 @@ export default function StatCards() {
     return () => clearInterval(id);
   }, []);
 
-  const waitDisplay = loading ? "—" : String(avgWaitTime);
+  const waitDisplay = loading ? "—" : String(displayValue);
   const waitSub = loading
     ? "조회 중…"
     : isMock
@@ -54,9 +71,9 @@ export default function StatCards() {
 
   const cards = [
     {
-      label: "출국장 평균 대기시간",
+      label: cardLabel,
       value: waitDisplay,
-      unit: loading ? "" : "분",
+      unit: loading ? "" : displayUnit,
       color: "#00AAB5",
       icon: "✈",
       sub: waitSub,

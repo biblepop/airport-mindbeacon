@@ -143,7 +143,6 @@ function GateBlock({ gate, isPulsing }: { gate: GateItem; isPulsing: boolean }) 
 // ── 메인 ─────────────────────────────────────────────────────
 export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void }) {
   const [depT1, setDepT1] = useState<GateItem[]>([]);
-  const [depT2, setDepT2] = useState<GateItem[]>([]);
   const [totalPax, setTotalPax] = useState(0);
   const [feed, setFeed]   = useState<FeedEvent[]>([]);
   const [pushIdx, setPushIdx] = useState(0);
@@ -158,9 +157,7 @@ export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void })
         .then(r => r.json())
         .then(data => {
           const t1: GateItem[] = data?.t1Items ?? [];
-          const t2: GateItem[] = data?.t2Items ?? [];
           if (t1.length > 0) setDepT1(t1);
-          if (t2.length > 0) setDepT2(t2);
           setTotalPax(data?.totalPax ?? 0);
         })
         .catch(() => {});
@@ -171,8 +168,7 @@ export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void })
   }, []);
 
   const displayT1 = depT1.length > 0 ? depT1 : MOCK_T1;
-  const displayT2 = depT2.length > 0 ? depT2 : MOCK_T2;
-  const allGates  = [...displayT1, ...displayT2];
+  const allGates  = displayT1;
 
   // ref를 항상 최신 gates로 유지
   allGatesRef.current = allGates;
@@ -237,16 +233,10 @@ export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void })
           <h3 className="font-bold text-gray-800">터미널 히트맵</h3>
           <span className="text-xs text-gray-400">waitTime 기준 실시간 색상</span>
         </div>
-        <p className="text-xs font-semibold text-gray-400 mb-2">T1 출국장</p>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+        <p className="text-xs font-semibold text-gray-400 mb-2">T1 출국장 (실시간 API)</p>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           {displayT1.map((g, i) => (
             <GateBlock key={`t1-${i}`} gate={g} isPulsing={gateStatus(g.waitTime) === "혼잡"} />
-          ))}
-        </div>
-        <p className="text-xs font-semibold text-gray-400 mb-2">T2 출국장</p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {displayT2.map((g, i) => (
-            <GateBlock key={`t2-${i}`} gate={g} isPulsing={gateStatus(g.waitTime) === "혼잡"} />
           ))}
         </div>
         <div className="flex gap-4 mt-4 text-xs text-gray-500">

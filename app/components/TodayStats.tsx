@@ -1,3 +1,5 @@
+"use client";
+
 const stats = [
   {
     label: "총 감지 건수",
@@ -32,12 +34,20 @@ const stats = [
   },
 ];
 
+function todayLabel() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}.${m}.${day} 기준`;
+}
+
 export default function TodayStats() {
   return (
     <section className="max-w-screen-xl mx-auto px-6 pb-8">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-xl font-bold text-airport-black">오늘의 통계</h2>
-        <span className="text-sm text-gray-400 font-medium">2026.03.23 기준</span>
+        <span className="text-sm text-gray-400 font-medium">{todayLabel()}</span>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-100">

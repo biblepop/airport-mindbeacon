@@ -25,31 +25,41 @@ export default function StatCards() {
 
           setIsMock(data?._mock === true);
 
+          // route.ts가 미리 계산한 totalPax 우선 사용
+          const totalPax: number = data?.totalPax ?? 0;
           const items: GateItem[] = data?.body?.items ?? [];
 
-          const totalWaitLength = items.reduce(
-            (s, item) => s + parseInt(item.waitLength ?? "0", 10),
-            0
-          );
-
-          if (totalWaitLength > 0) {
-            setDisplayValue(totalWaitLength);
+          // totalPax > 0 이면 인원(명) 표시
+          if (totalPax > 0) {
+            setDisplayValue(totalPax);
             setDisplayUnit("명");
             setCardLabel("출국장 대기 인원");
           } else {
-            const times = items
-              .map((item) => parseInt(item.waitTime ?? "0", 10))
-              .filter((t) => t > 0);
-            const avg =
-              times.length > 0
-                ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
-                : 0;
-            setDisplayValue(avg);
-            setDisplayUnit("분");
-            setCardLabel("출국장 평균 대기시간");
+            // 폴백: items에서 waitLength 합산
+            const totalWaitLength = items.reduce(
+              (s, item) => s + parseInt(item.waitLength ?? "0", 10),
+              0
+            );
+            if (totalWaitLength > 0) {
+              setDisplayValue(totalWaitLength);
+              setDisplayUnit("명");
+              setCardLabel("출국장 대기 인원");
+            } else {
+              // 최종 폴백: waitTime 평균(분)
+              const times = items
+                .map((item) => parseInt(item.waitTime ?? "0", 10))
+                .filter((t) => t > 0);
+              const avg =
+                times.length > 0
+                  ? Math.round(times.reduce((s, t) => s + t, 0) / times.length)
+                  : 0;
+              setDisplayValue(avg);
+              setDisplayUnit("분");
+              setCardLabel("출국장 평균 대기시간");
+            }
           }
 
-          console.log("[StatCards] items:", items.length, "개 / totalWaitLength:", totalWaitLength);
+          console.log("[StatCards] items:", items.length, "개 / totalPax:", totalPax);
         })
         .catch((err) => {
           console.error("[StatCards] fetch failed:", err);

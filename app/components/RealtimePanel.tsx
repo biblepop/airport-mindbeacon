@@ -142,7 +142,7 @@ export default function RealtimePanel() {
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-gray-800">시간대별 혼잡도</h3>
-          <span className="text-xs text-gray-400">2026.03.25 기준</span>
+          <span className="text-xs text-gray-400">{(() => { const d = new Date(); return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")} 기준`; })()}</span>
         </div>
         <div className="flex items-end gap-1" style={{ height: 128 }}>
           {displayHourly.map((h, i) => {

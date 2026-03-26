@@ -110,42 +110,6 @@ function ArrivalRow({ z }: { z: GateItem }) {
   );
 }
 
-/** 아코디언 섹션 래퍼 */
-function Accordion({
-  title, summary, isMock, open, onToggle, children, refreshing,
-}: {
-  title: string;
-  summary: string;
-  isMock: boolean;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-  refreshing: boolean;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <button
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
-        onClick={onToggle}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <h3 className="font-bold text-gray-800 text-sm whitespace-nowrap">{title}</h3>
-          <span className="text-xs text-gray-400 truncate hidden sm:block">{summary}</span>
-        </div>
-        <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-          <SourceBadge isMock={isMock} />
-          <span className="text-gray-400 text-sm">{open ? "▲" : "▼"}</span>
-        </div>
-      </button>
-      {open && (
-        <div className={`px-5 pb-5 transition-opacity duration-300 ${refreshing ? "opacity-50" : "opacity-100"}`}>
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Mock 데이터 ────────────────────────────────────────────────
 const MOCK_DEP_T1: GateItem[] = [
   { gateId: "DG1_E", terminalId: "P01", waitTime: "5",  waitLength: "12" },
@@ -199,6 +163,8 @@ const MOCK_HOURLY_FALLBACK: HourlyItem[] = [
   { hour: "23:00", t1Passenger:  750, t2Passenger:  620 },
 ];
 
+type MainTab = "dep" | "arr" | "park";
+
 // ── 메인 컴포넌트 ──────────────────────────────────────────────
 export default function RealtimePanel() {
   const [depT1, setDepT1] = useState<GateItem[]>([]);
@@ -213,10 +179,8 @@ export default function RealtimePanel() {
   const [isMockPax, setIsMockPax] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // 아코디언 상태: 출국장만 기본 열림
-  const [openDep, setOpenDep] = useState(true);
-  const [openArr, setOpenArr] = useState(false);
-  const [openPark, setOpenPark] = useState(false);
+  // 메인 탭: 출국장 기본 선택
+  const [mainTab, setMainTab] = useState<MainTab>("dep");
 
   // 입국장 T1/T2 탭
   const [arrTab, setArrTab] = useState<"T1" | "T2">("T1");
@@ -277,14 +241,6 @@ export default function RealtimePanel() {
   );
   const maxPax = Math.max(...displayHourly.map((h) => h.t1Passenger + h.t2Passenger), 1);
 
-  // 요약 계산
-  const depAvgWait = Math.round(
-    displayDepT1.reduce((s, z) => s + parseInt(z.waitTime ?? "0", 10), 0) /
-    Math.max(displayDepT1.length, 1)
-  );
-  const arrTotalPax = [...displayArrT1, ...displayArrT2].reduce(
-    (s, z) => s + parseInt(z.waitLength ?? "0", 10), 0
-  );
   const parkAvgRate = Math.round(
     displayParking.reduce((s, p) => s + p.usageRate, 0) / Math.max(displayParking.length, 1)
   );
@@ -296,10 +252,16 @@ export default function RealtimePanel() {
 
   const activeArrGates = arrTab === "T1" ? displayArrT1 : displayArrT2;
 
+  const MAIN_TABS: { key: MainTab; label: string; summary: string; isMock: boolean }[] = [
+    { key: "dep",  label: "출국장 (T1)", summary: "T1 · " + (isMockDep  ? "시뮬레이션" : "실시간 API"), isMock: isMockDep  },
+    { key: "arr",  label: "입국장",      summary: "T1·T2 · " + (isMockArr  ? "시뮬레이션" : "실시간 API"), isMock: isMockArr  },
+    { key: "park", label: "주차장",      summary: `${displayParking.length}개 구역 · ` + (isMockPark ? "시뮬레이션" : "실시간 API"), isMock: isMockPark },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
 
-      {/* ── 시간대별 혼잡도 차트 ── */}
+      {/* ── 시간대별 혼잡도 차트 (상단 고정) ── */}
       <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-gray-800 text-sm">시간대별 혼잡도</h3>
@@ -338,101 +300,142 @@ export default function RealtimePanel() {
         </div>
       </div>
 
-      {/* ── 출국장 (T1만, 아코디언) ── */}
-      <Accordion
-        title="출국장 대기 현황 (T1)"
-        summary={`${displayDepT1.length}개 게이트 · 평균 대기 ${depAvgWait}분`}
-        isMock={isMockDep}
-        open={openDep}
-        onToggle={() => setOpenDep((v) => !v)}
-        refreshing={refreshing}
-      >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {displayDepT1.map((z, i) => <GateCard key={`dep-t1-${i}`} z={z} idx={i} />)}
-        </div>
-      </Accordion>
+      {/* ── 서브 탭 영역 ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
-      {/* ── 입국장 (T1/T2 탭, 아코디언) ── */}
-      <Accordion
-        title="입국장 혼잡도"
-        summary={`T1·T2 · 현재 ${arrTotalPax}명 대기`}
-        isMock={isMockArr}
-        open={openArr}
-        onToggle={() => setOpenArr((v) => !v)}
-        refreshing={refreshing}
-      >
-        {/* T1 / T2 탭 */}
-        <div className="flex gap-1 mb-3 bg-gray-100 rounded-lg p-1 w-fit">
-          {(["T1", "T2"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setArrTab(t)}
-              className="text-xs font-semibold px-4 py-1.5 rounded-md transition-colors"
-              style={{
-                backgroundColor: arrTab === t ? "#00AAB5" : "transparent",
-                color: arrTab === t ? "#fff" : "#6b7280",
-              }}
-            >
-              {t} 입국장
-            </button>
-          ))}
-        </div>
-        {/* 압축 바 리스트 */}
-        <div className="divide-y divide-gray-50">
-          {activeArrGates.map((z, i) => (
-            <ArrivalRow key={`arr-${arrTab}-${i}`} z={z} />
-          ))}
-        </div>
-        <div className="flex gap-4 mt-3 text-xs text-gray-500">
-          {[{ label: "원활 (0–9분)", color: "#00AAB5" }, { label: "보통 (10–19분)", color: "#F99D1B" }, { label: "혼잡 (20분+)", color: "#ef4444" }].map((l) => (
-            <span key={l.label} className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-sm inline-block flex-shrink-0" style={{ background: l.color }} />
-              {l.label}
-            </span>
-          ))}
-        </div>
-      </Accordion>
-
-      {/* ── 주차장 (아코디언) ── */}
-      <Accordion
-        title="주차장 현황"
-        summary={`${displayParking.length}개 구역 · 평균 사용률 ${parkAvgRate}%`}
-        isMock={isMockPark}
-        open={openPark}
-        onToggle={() => setOpenPark((v) => !v)}
-        refreshing={refreshing}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {displayParking.map((p, i) => (
-            <div
-              key={i}
-              className="rounded-xl p-4 border"
-              style={{
-                backgroundColor: STATUS_BG[p.status] || "rgba(0,170,181,0.05)",
-                borderColor: `${STATUS_COLOR[p.status] || "#00AAB5"}30`,
-              }}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-600 truncate">{p.name}</span>
-                <span className="text-xs font-bold" style={{ color: STATUS_COLOR[p.status] }}>
-                  {p.status}
+        {/* 탭 헤더 */}
+        <div className="flex border-b border-gray-100">
+          {MAIN_TABS.map((tab) => {
+            const active = mainTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setMainTab(tab.key)}
+                className="flex-1 flex flex-col items-center py-3 px-2 transition-colors relative"
+                style={{
+                  backgroundColor: active ? "rgba(0,170,181,0.05)" : "transparent",
+                }}
+              >
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: active ? "#00AAB5" : "#6b7280" }}
+                >
+                  {tab.label}
                 </span>
+                <span className="text-[10px] mt-0.5" style={{ color: active ? "#00AAB5" : "#9ca3af" }}>
+                  {tab.summary}
+                </span>
+                {active && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
+                    style={{ backgroundColor: "#00AAB5" }}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 탭 콘텐츠 */}
+        <div className={`p-5 transition-opacity duration-300 ${refreshing ? "opacity-50" : "opacity-100"}`}>
+
+          {/* 출국장 (T1) */}
+          {mainTab === "dep" && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-bold text-gray-700">출국장 대기 현황 (T1)</h4>
+                <SourceBadge isMock={isMockDep} />
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5 mb-2">
-                <div
-                  className="h-1.5 rounded-full transition-all duration-300"
-                  style={{ width: `${p.usageRate}%`, backgroundColor: STATUS_COLOR[p.status] }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>사용 {p.used.toLocaleString()}면</span>
-                <span className="font-semibold" style={{ color: STATUS_COLOR[p.status] }}>{p.usageRate}%</span>
-                <span>전체 {p.total.toLocaleString()}면</span>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {displayDepT1.map((z, i) => <GateCard key={`dep-t1-${i}`} z={z} idx={i} />)}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* 입국장 */}
+          {mainTab === "arr" && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-bold text-gray-700">입국장 혼잡도</h4>
+                <SourceBadge isMock={isMockArr} />
+              </div>
+              {/* T1 / T2 탭 */}
+              <div className="flex gap-1 mb-3 bg-gray-100 rounded-lg p-1 w-fit">
+                {(["T1", "T2"] as const).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setArrTab(t)}
+                    className="text-xs font-semibold px-4 py-1.5 rounded-md transition-colors"
+                    style={{
+                      backgroundColor: arrTab === t ? "#00AAB5" : "transparent",
+                      color: arrTab === t ? "#fff" : "#6b7280",
+                    }}
+                  >
+                    {t} 입국장
+                  </button>
+                ))}
+              </div>
+              <div className="divide-y divide-gray-50">
+                {activeArrGates.map((z, i) => (
+                  <ArrivalRow key={`arr-${arrTab}-${i}`} z={z} />
+                ))}
+              </div>
+              <div className="flex gap-4 mt-3 text-xs text-gray-500">
+                {[{ label: "원활 (0–9분)", color: "#00AAB5" }, { label: "보통 (10–19분)", color: "#F99D1B" }, { label: "혼잡 (20분+)", color: "#ef4444" }].map((l) => (
+                  <span key={l.label} className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-sm inline-block flex-shrink-0" style={{ background: l.color }} />
+                    {l.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 주차장 */}
+          {mainTab === "park" && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-bold text-gray-700">주차장 현황</h4>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">평균 사용률 {parkAvgRate}%</span>
+                  <SourceBadge isMock={isMockPark} />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {displayParking.map((p, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl p-4 border"
+                    style={{
+                      backgroundColor: STATUS_BG[p.status] || "rgba(0,170,181,0.05)",
+                      borderColor: `${STATUS_COLOR[p.status] || "#00AAB5"}30`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-gray-600 truncate">{p.name}</span>
+                      <span className="text-xs font-bold" style={{ color: STATUS_COLOR[p.status] }}>
+                        {p.status}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1.5 mb-2">
+                      <div
+                        className="h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${p.usageRate}%`, backgroundColor: STATUS_COLOR[p.status] }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>사용 {p.used.toLocaleString()}면</span>
+                      <span className="font-semibold" style={{ color: STATUS_COLOR[p.status] }}>{p.usageRate}%</span>
+                      <span>전체 {p.total.toLocaleString()}면</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
-      </Accordion>
+      </div>
 
     </div>
   );

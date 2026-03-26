@@ -70,7 +70,7 @@ export default function StatCards() {
   }, []);
 
   const waitDisplay = loading ? "—" : String(displayValue);
-  const waitSub = loading ? "조회 중…" : "T1 출국장 합산";
+  const waitSub = loading ? "조회 중…" : "T1·T2 출국장 합산";
 
   const cards = [
     {

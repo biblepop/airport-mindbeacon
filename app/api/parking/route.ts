@@ -104,8 +104,20 @@ export async function GET() {
     console.log("[parking] 응답 전체:\n", rawText);
 
     const data = JSON.parse(rawText);
+    console.log("[parking] 응답 전체:", JSON.stringify(data));
+
+    // 파싱 경로 순서대로 시도
+    type Nested = Record<string, unknown>;
+    const body = (data as Nested)?.body as Nested | undefined;
+    const resBody = ((data as Nested)?.response as Nested | undefined)?.body as Nested | undefined;
+
+    console.log("[parking] data.body.items:", JSON.stringify(body?.items));
+    console.log("[parking] data.response.body.items:", JSON.stringify(resBody?.items));
+    console.log("[parking] data.body.items.item:", JSON.stringify((body?.items as Nested | undefined)?.item));
+    console.log("[parking] data.items:", JSON.stringify((data as Nested)?.items));
+
     const rawItems = extractItems(data);
-    console.log("[parking] extractItems:", rawItems.length, "개");
+    console.log("[parking] extractItems 결과:", rawItems.length, "개", JSON.stringify(rawItems));
 
     const items = rawItems.map(normalizeItem).filter((x): x is ParkingItem => x !== null);
     console.log("[parking] 정규화:", items.length, "개");

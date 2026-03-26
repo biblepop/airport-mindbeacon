@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const revalidate = 0;
+
 interface HourlyItem {
   hour: string;       // "HH:00"
   t1Passenger: number;
@@ -72,6 +74,7 @@ function normalizeItem(item: Record<string, unknown>): HourlyItem | null {
 }
 
 export async function GET() {
+  console.log("[passenger] 함수 실행됨", new Date().toISOString());
   const apiKey = process.env.AIRPORT_API_KEY;
   const today = new Date();
   const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;

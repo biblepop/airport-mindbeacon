@@ -20,7 +20,7 @@ export default function HeroBanner() {
           세계 최초 능동형 심리안전 케어 시스템
         </h1>
         <p className="text-white/80 text-base mt-3">
-          인천공항 AI-PORT 아이디어 공모전 세션1 &nbsp;|&nbsp; 제출일: 2026.03.23
+          인천공항 AI-PORT 아이디어 공모전 세션1 &nbsp;|&nbsp; 제출일: 2026.03.26
         </p>
       </div>
     </section>

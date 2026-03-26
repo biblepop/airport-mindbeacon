@@ -28,8 +28,12 @@ async function fetchTerminal(apiKey: string, terminalId: string): Promise<GateIt
   console.log(`[congestion] 응답 (${terminalId}):\n`, rawText);
 
   const data = JSON.parse(rawText);
-  const items: GateItem[] = data?.body?.items ?? [];
-  const totalCount: number = data?.body?.totalCount ?? 0;
+  console.log(`[congestion] 응답 전체 (${terminalId}):`, JSON.stringify(data));
+
+  type N = Record<string, unknown>;
+  const resBody = ((data as N)?.response as N | undefined)?.body as N | undefined;
+  const items: GateItem[] = Array.isArray(resBody?.items) ? (resBody?.items as GateItem[]) : [];
+  const totalCount: number = (resBody?.totalCount as number) ?? 0;
   console.log(`[congestion] items (${terminalId}):`, items.length, "/ totalCount:", totalCount);
 
   return items;

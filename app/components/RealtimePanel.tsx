@@ -212,7 +212,7 @@ export default function RealtimePanel() {
         </div>
         <div className={`transition-opacity duration-300 ${opacity}`}>
           <p className="text-xs font-semibold text-gray-400 mb-2">T1 게이트</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {displayDepT1.map((z, i) => <GateCard key={`dep-t1-${i}`} z={z} idx={i} />)}
           </div>
           <p className="text-xs font-semibold text-gray-400 mb-2">T2 게이트</p>

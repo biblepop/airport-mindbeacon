@@ -3,22 +3,22 @@
 const stats = [
   {
     label: "총 감지 건수",
-    value: "359",
+    value: "47",
     unit: "건",
     color: "#5785C5",
     icon: "📊",
   },
   {
     label: "케어 완료",
-    value: "312",
+    value: "38",
     unit: "건",
     color: "#00AAB5",
     icon: "✅",
-    sub: "완료율 86.9%",
+    sub: "완료율 80.9%",
   },
   {
     label: "평균 응답 시간",
-    value: "1.8",
+    value: "2.3",
     unit: "분",
     color: "#F99D1B",
     icon: "⚡",
@@ -26,7 +26,7 @@ const stats = [
   },
   {
     label: "작업자 알림",
-    value: "28",
+    value: "8",
     unit: "건",
     color: "#221E1F",
     icon: "🔔",

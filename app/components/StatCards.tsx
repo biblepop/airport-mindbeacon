@@ -13,7 +13,6 @@ export default function StatCards() {
   const [displayValue, setDisplayValue] = useState<number>(0);
   const [displayUnit, setDisplayUnit] = useState<string>("명");
   const [cardLabel, setCardLabel] = useState<string>("출국장 대기 인원");
-  const [isMock, setIsMock] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,8 +21,6 @@ export default function StatCards() {
         .then((r) => r.json())
         .then((data) => {
           console.log("[StatCards] raw API response:", data);
-
-          setIsMock(data?._mock === true);
 
           // route.ts가 미리 계산한 totalPax 우선 사용
           const totalPax: number = data?.totalPax ?? 0;
@@ -73,11 +70,7 @@ export default function StatCards() {
   }, []);
 
   const waitDisplay = loading ? "—" : String(displayValue);
-  const waitSub = loading
-    ? "조회 중…"
-    : isMock
-    ? "⚠ 시뮬레이션 데이터"
-    : "실시간 API 데이터";
+  const waitSub = loading ? "조회 중…" : "T1 출국장 합산";
 
   const cards = [
     {
@@ -87,7 +80,6 @@ export default function StatCards() {
       color: "#00AAB5",
       icon: "✈",
       sub: waitSub,
-      subColor: isMock && !loading ? "#F99D1B" : undefined,
     },
     {
       label: "불안 감지 여객",
@@ -142,10 +134,7 @@ export default function StatCards() {
               </span>
               <span className="text-base text-gray-400 mb-0.5">{c.unit}</span>
             </div>
-            <p
-              className="text-xs mt-1"
-              style={{ color: c.subColor ?? "#9ca3af" }}
-            >
+            <p className="text-xs mt-1 text-gray-400">
               {c.sub}
             </p>
           </div>

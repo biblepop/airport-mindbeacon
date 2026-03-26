@@ -65,7 +65,10 @@ export default function RealtimePanel() {
         console.log("[RealtimePanel] congestion items:", items.length, "개");
         if (items.length > 0) setZones(items.slice(0, 6));
 
+        console.log("[RealtimePanel] passenger 응답 전체:", JSON.stringify(pData, null, 2));
+
         const hourlyItems: HourlyItem[] = pData?.items || [];
+        console.log("[RealtimePanel] hourlyItems:", hourlyItems.length, "개", hourlyItems);
         if (hourlyItems.length > 0) setHourly(hourlyItems);
       } catch {
         // fallback to mock
@@ -81,12 +84,23 @@ export default function RealtimePanel() {
 
   const displayZones = zones.length > 0 ? zones : MOCK_ZONES;
 
-  const mockHourly: HourlyItem[] = Array.from({ length: 12 }, (_, i) => ({
-    hour: `${String(i * 2).padStart(2, "0")}:00`,
+  // 현재 시각 이후 시간대 제외
+  const currentHour = new Date().getHours();
+  function filterPastHours(items: HourlyItem[]): HourlyItem[] {
+    return items.filter((item) => {
+      const h = parseInt(item.hour.split(":")[0], 10);
+      return h <= currentHour;
+    });
+  }
+
+  const mockHourly: HourlyItem[] = Array.from({ length: 24 }, (_, i) => ({
+    hour: `${String(i).padStart(2, "0")}:00`,
     t1Passenger: Math.floor(800 + Math.random() * 3500),
     t2Passenger: Math.floor(600 + Math.random() * 2800),
   }));
-  const displayHourly = hourly.length > 0 ? hourly.slice(0, 12) : mockHourly;
+
+  const rawHourly = hourly.length > 0 ? hourly : mockHourly;
+  const displayHourly = filterPastHours(rawHourly);
   const maxPax = Math.max(
     ...displayHourly.map((h) => h.t1Passenger + h.t2Passenger),
     1

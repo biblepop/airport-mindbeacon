@@ -9,57 +9,73 @@ export interface ArrivalItem {
   waitLength?: string;
 }
 
+interface RawRow {
+  terno?: string;
+  entrygate?: string;
+  korean?: string;
+  foreigner?: string;
+  airport?: string;
+  flightid?: string;
+}
+
 const BASE_URL =
   "https://apis.data.go.kr/B551177/StatusOfArrivals/getArrivalsCongestion";
 
-async function fetchTerminal(apiKey: string, terminalId: string): Promise<ArrivalItem[]> {
-  const url =
-    `${BASE_URL}?serviceKey=${apiKey}` +
-    `&numOfRows=20&pageNo=1&type=json&terminalId=${terminalId}`;
+/** 대기인원 → 체감 대기시간(분) 추정 */
+function estimateWaitTime(pax: number): string {
+  if (pax >= 30) return "20";
+  if (pax >= 10) return "10";
+  return "4";
+}
 
-  console.log(`[arrivals] 요청 (${terminalId}):`, url);
-  const res = await fetch(url, { cache: "no-store" });
-  console.log(`[arrivals] HTTP status (${terminalId}):`, res.status);
+/** response.body.items 배열 추출 */
+function extractRawRows(data: unknown): RawRow[] {
+  if (!data || typeof data !== "object") return [];
+  type N = Record<string, unknown>;
+  const items = (((data as N).response as N | undefined)?.body as N | undefined)?.items;
+  return Array.isArray(items) ? (items as RawRow[]) : [];
+}
 
-  if (!res.ok) throw new Error(`HTTP ${res.status} (${terminalId})`);
+/** 게이트별 집계: (terno, entrygate) 단위로 korean+foreigner 합산 */
+function aggregateByGate(rows: RawRow[]): ArrivalItem[] {
+  const map = new Map<string, { terminal: string; gate: string; pax: number }>();
 
-  const rawText = await res.text();
-  console.log(`[arrivals] 응답 (${terminalId}):\n`, rawText);
+  for (const row of rows) {
+    const terminal = row.terno ?? "";
+    const gate = row.entrygate ?? "";
+    if (!terminal || !gate) continue;
 
-  const data = JSON.parse(rawText);
+    const pax =
+      Math.round(parseFloat(row.korean ?? "0")) +
+      Math.round(parseFloat(row.foreigner ?? "0"));
 
-  // 다양한 래핑 구조 대응
-  type Nested = Record<string, unknown>;
-  const tryItem = (d: Nested) => {
-    const res = d?.response as Nested | undefined;
-    const resBody = res?.body as Nested | undefined;
-    const resItems = resBody?.items as Nested | undefined;
-    const body = d?.body as Nested | undefined;
-    const bodyItems = body?.items as Nested | undefined;
-    return resItems?.item ?? bodyItems?.item ?? body?.items ?? d?.items;
-  };
+    const key = `${terminal}|${gate}`;
+    const existing = map.get(key);
+    if (existing) {
+      existing.pax += pax;
+    } else {
+      map.set(key, { terminal, gate, pax });
+    }
+  }
 
-  const raw = tryItem(data as Record<string, unknown>);
-  const arr: ArrivalItem[] = raw
-    ? Array.isArray(raw)
-      ? raw
-      : [raw]
-    : [];
-
-  console.log(`[arrivals] items (${terminalId}):`, arr.length, "개");
-  return arr;
+  return Array.from(map.values()).map(({ terminal, gate, pax }) => ({
+    gateId: `${gate}게이트`,
+    terminalId: terminal,
+    waitLength: String(pax),
+    waitTime: estimateWaitTime(pax),
+  }));
 }
 
 const MOCK_T1: ArrivalItem[] = [
-  { gateId: "AG1_E", terminalId: "P01", waitTime: "4",  waitLength: "8"  },
-  { gateId: "AG2_E", terminalId: "P01", waitTime: "9",  waitLength: "25" },
-  { gateId: "AG3_W", terminalId: "P01", waitTime: "16", waitLength: "45" },
-  { gateId: "AG4_W", terminalId: "P01", waitTime: "6",  waitLength: "12" },
+  { gateId: "A게이트", terminalId: "T1", waitTime: "4",  waitLength: "8"  },
+  { gateId: "B게이트", terminalId: "T1", waitTime: "10", waitLength: "25" },
+  { gateId: "C게이트", terminalId: "T1", waitTime: "20", waitLength: "45" },
+  { gateId: "D게이트", terminalId: "T1", waitTime: "4",  waitLength: "12" },
 ];
 
 const MOCK_T2: ArrivalItem[] = [
-  { gateId: "AG1_E", terminalId: "P02", waitTime: "7",  waitLength: "18" },
-  { gateId: "AG2_W", terminalId: "P02", waitTime: "11", waitLength: "32" },
+  { gateId: "E게이트", terminalId: "T2", waitTime: "4",  waitLength: "18" },
+  { gateId: "F게이트", terminalId: "T2", waitTime: "10", waitLength: "32" },
 ];
 
 export async function GET() {
@@ -73,19 +89,29 @@ export async function GET() {
     });
   }
 
-  try {
-    const [t1Items, t2Items] = await Promise.all([
-      fetchTerminal(apiKey, "P01"),
-      fetchTerminal(apiKey, "P02"),
-    ]);
+  const url =
+    `${BASE_URL}?serviceKey=${apiKey}&numOfRows=100&pageNo=1&type=json`;
 
-    const allItems = [...t1Items, ...t2Items];
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    console.log("[arrivals] HTTP status:", res.status);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const rawText = await res.text();
+    console.log("[arrivals] 응답 전체:\n", rawText);
+
+    const data = JSON.parse(rawText);
+    const rows = extractRawRows(data);
+    console.log("[arrivals] rows:", rows.length, "개");
+
+    const allItems = aggregateByGate(rows);
+    console.log("[arrivals] 집계 결과:", allItems.length, "개", JSON.stringify(allItems));
+
     if (allItems.length === 0) throw new Error("arrivals 데이터 없음");
 
-    const totalPax = allItems.reduce(
-      (s, i) => s + parseInt(i.waitLength ?? "0", 10),
-      0
-    );
+    const t1Items = allItems.filter((i) => i.terminalId === "T1");
+    const t2Items = allItems.filter((i) => i.terminalId === "T2");
+    const totalPax = allItems.reduce((s, i) => s + parseInt(i.waitLength ?? "0", 10), 0);
 
     return NextResponse.json({ t1Items, t2Items, totalPax, _mock: false });
   } catch (err) {

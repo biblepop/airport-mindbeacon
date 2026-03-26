@@ -29,11 +29,15 @@ async function fetchTerminal(apiKey: string, terminalId: string): Promise<Arriva
   const data = JSON.parse(rawText);
 
   // 다양한 래핑 구조 대응
-  const tryItem = (d: Record<string, unknown>) =>
-    (d?.response as any)?.body?.items?.item ??
-    (d?.body as any)?.items?.item ??
-    (d?.body as any)?.items ??
-    d?.items;
+  type Nested = Record<string, unknown>;
+  const tryItem = (d: Nested) => {
+    const res = d?.response as Nested | undefined;
+    const resBody = res?.body as Nested | undefined;
+    const resItems = resBody?.items as Nested | undefined;
+    const body = d?.body as Nested | undefined;
+    const bodyItems = body?.items as Nested | undefined;
+    return resItems?.item ?? bodyItems?.item ?? body?.items ?? d?.items;
+  };
 
   const raw = tryItem(data as Record<string, unknown>);
   const arr: ArrivalItem[] = raw

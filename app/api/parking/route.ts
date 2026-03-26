@@ -25,17 +25,24 @@ function extractItems(data: unknown): Record<string, unknown>[] {
   if (!data || typeof data !== "object") return [];
   const d = data as Record<string, unknown>;
 
+  type Nested = Record<string, unknown>;
+  const response = d.response as Nested | undefined;
+  const resBody = response?.body as Nested | undefined;
+  const resItems = resBody?.items as Nested | undefined;
+  const body = d.body as Nested | undefined;
+  const bodyItems = body?.items as Nested | undefined;
+
   const tryPaths = [
     () => {
-      const item = ((d.response as any)?.body?.items as any)?.item;
+      const item = resItems?.item;
       if (item) return Array.isArray(item) ? item : [item];
     },
     () => {
-      const item = ((d.body as any)?.items as any)?.item;
+      const item = bodyItems?.item;
       if (item) return Array.isArray(item) ? item : [item];
     },
-    () => Array.isArray((d.response as any)?.body?.items) ? (d.response as any).body.items : null,
-    () => Array.isArray((d.body as any)?.items) ? (d.body as any).items : null,
+    () => Array.isArray(resBody?.items) ? resBody?.items as unknown[] : null,
+    () => Array.isArray(body?.items) ? body?.items as unknown[] : null,
     () => Array.isArray(d.items) ? d.items : null,
   ];
 

@@ -12,18 +12,19 @@ function extractRawItems(data: unknown): Record<string, unknown>[] {
   if (!data || typeof data !== "object") return [];
   const d = data as Record<string, unknown>;
 
-  const resBody = (d.response as Record<string, unknown>)?.body as Record<string, unknown> | undefined;
+  type Nested = Record<string, unknown>;
+  const resBody = ((d.response as Nested | undefined)?.body) as Nested | undefined;
   if (resBody) {
-    const ri = (resBody.items as Record<string, unknown>)?.item;
-    if (ri) return Array.isArray(ri) ? ri : [ri];
-    if (Array.isArray(resBody.items)) return resBody.items as Record<string, unknown>[];
+    const ri = (resBody.items as Nested | undefined)?.item;
+    if (ri) return Array.isArray(ri) ? (ri as Nested[]) : [ri as Nested];
+    if (Array.isArray(resBody.items)) return resBody.items as Nested[];
   }
 
-  const body = d.body as Record<string, unknown> | undefined;
+  const body = d.body as Nested | undefined;
   if (body) {
-    const bi = (body.items as Record<string, unknown>)?.item;
-    if (bi) return Array.isArray(bi) ? bi : [bi];
-    if (Array.isArray(body.items)) return body.items as Record<string, unknown>[];
+    const bi = (body.items as Nested | undefined)?.item;
+    if (bi) return Array.isArray(bi) ? (bi as Nested[]) : [bi as Nested];
+    if (Array.isArray(body.items)) return body.items as Nested[];
   }
 
   if (Array.isArray(d.items)) return d.items as Record<string, unknown>[];

@@ -20,58 +20,31 @@ function toNum(v: unknown): number {
   return parseInt(String(v ?? "0"), 10) || 0;
 }
 
-/** 응답에서 주차장 항목 배열 추출 */
+/** 응답에서 주차장 항목 배열 추출: data.response.body.items → 배열 직접 */
 function extractItems(data: unknown): Record<string, unknown>[] {
   if (!data || typeof data !== "object") return [];
-  const d = data as Record<string, unknown>;
-
-  type Nested = Record<string, unknown>;
-  const response = d.response as Nested | undefined;
-  const resBody = response?.body as Nested | undefined;
-  const resItems = resBody?.items as Nested | undefined;
-  const body = d.body as Nested | undefined;
-  const bodyItems = body?.items as Nested | undefined;
-
-  const tryPaths = [
-    () => {
-      const item = resItems?.item;
-      if (item) return Array.isArray(item) ? item : [item];
-    },
-    () => {
-      const item = bodyItems?.item;
-      if (item) return Array.isArray(item) ? item : [item];
-    },
-    () => Array.isArray(resBody?.items) ? resBody?.items as unknown[] : null,
-    () => Array.isArray(body?.items) ? body?.items as unknown[] : null,
-    () => Array.isArray(d.items) ? d.items : null,
-  ];
-
-  for (const fn of tryPaths) {
-    const result = fn();
-    if (result && result.length > 0) return result as Record<string, unknown>[];
-  }
+  type N = Record<string, unknown>;
+  const d = data as N;
+  const items = ((d.response as N | undefined)?.body as N | undefined)?.items;
+  if (Array.isArray(items)) return items as N[];
   return [];
 }
 
-/** 단일 row → ParkingItem */
+/** 단일 row → ParkingItem
+ *  floor      = 주차장 이름
+ *  parking    = 현재 주차 차량수
+ *  parkingarea = 총 주차면수
+ */
 function normalizeItem(item: Record<string, unknown>): ParkingItem | null {
-  const name = String(
-    item.pkgNm ?? item.pkNm ?? item.parkNm ?? item.name ?? item.floor ?? ""
-  );
+  const name = String(item.floor ?? "");
   if (!name) return null;
 
-  const total =
-    toNum(item.totalCnt ?? item.pkTotalCnt ?? item.total ?? item.cntTotal ?? 0);
-  const used =
-    toNum(item.usedCnt ?? item.pkUsedCnt ?? item.used ?? item.cntUsed ?? 0);
-  const remain =
-    toNum(item.remainCnt ?? item.pkRemainCnt ?? item.remain ?? item.cntRemain ?? 0);
-
-  const actualUsed = used > 0 ? used : total > 0 ? total - remain : 0;
+  const used  = toNum(item.parking);
+  const total = toNum(item.parkingarea);
   if (total === 0) return null;
 
-  const usageRate = Math.round((actualUsed / total) * 100);
-  return { name, total, used: actualUsed, usageRate, status: getStatus(usageRate) };
+  const usageRate = Math.round((used / total) * 100);
+  return { name, total, used, usageRate, status: getStatus(usageRate) };
 }
 
 const MOCK_ITEMS: ParkingItem[] = [
@@ -105,16 +78,6 @@ export async function GET() {
 
     const data = JSON.parse(rawText);
     console.log("[parking] 응답 전체:", JSON.stringify(data));
-
-    // 파싱 경로 순서대로 시도
-    type Nested = Record<string, unknown>;
-    const body = (data as Nested)?.body as Nested | undefined;
-    const resBody = ((data as Nested)?.response as Nested | undefined)?.body as Nested | undefined;
-
-    console.log("[parking] data.body.items:", JSON.stringify(body?.items));
-    console.log("[parking] data.response.body.items:", JSON.stringify(resBody?.items));
-    console.log("[parking] data.body.items.item:", JSON.stringify((body?.items as Nested | undefined)?.item));
-    console.log("[parking] data.items:", JSON.stringify((data as Nested)?.items));
 
     const rawItems = extractItems(data);
     console.log("[parking] extractItems 결과:", rawItems.length, "개", JSON.stringify(rawItems));

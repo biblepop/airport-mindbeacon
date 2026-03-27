@@ -26,6 +26,16 @@ const BASE_WORKERS: Worker[] = [
   { role: "안내 데스크",  icon: "💁", score: 45, hours: 4.0, status: "정상" },
 ];
 
+// 히트맵 구역 → worker 인덱스 매핑
+const ZONE_MAP = [
+  { zone: "관제탑",    workerIdx: 0 },
+  { zone: "보안검색",  workerIdx: 1 },
+  { zone: "수하물처리",workerIdx: 4 },
+  { zone: "입국심사",  workerIdx: 3 },
+  { zone: "지상조업",  workerIdx: 2 },
+  { zone: "안내데스크",workerIdx: 5 },
+];
+
 const STATUS_CONFIG = {
   정상:   { color: "#00AAB5", bg: "rgba(0,170,181,0.08)",   bar: "#00AAB5",  label: "정상 근무 중",                       labelColor: "#00AAB5" },
   휴식권장:{ color: "#F99D1B", bg: "rgba(249,157,27,0.10)",  bar: "#F99D1B",  label: "⚠️ 30분 내 휴식 권고 알림 발송",     labelColor: "#d97706" },
@@ -118,6 +128,48 @@ export default function WorkerMonitor() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* 구역 히트맵 */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-bold text-gray-800">구역별 스트레스 히트맵</span>
+          <span className="text-[11px] text-gray-400">3초마다 자동 갱신</span>
+        </div>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+          {ZONE_MAP.map(({ zone, workerIdx }) => {
+            const w = workers[workerIdx];
+            const isRed    = w.score >= 85;
+            const isOrange = w.score >= 70 && w.score < 85;
+            const bg    = isRed ? "rgba(239,68,68,0.12)"     : isOrange ? "rgba(249,157,27,0.12)"    : "rgba(0,170,181,0.10)";
+            const border= isRed ? "rgba(239,68,68,0.35)"     : isOrange ? "rgba(249,157,27,0.35)"    : "rgba(0,170,181,0.30)";
+            const textC = isRed ? "#dc2626"                  : isOrange ? "#d97706"                  : "#00AAB5";
+            return (
+              <div
+                key={zone}
+                className={`relative rounded-xl p-3 border flex flex-col items-center gap-1 transition-all duration-700${isRed ? " animate-pulse" : ""}`}
+                style={{ backgroundColor: bg, borderColor: border }}
+              >
+                {/* 교대 필요 뱃지 */}
+                {isRed && (
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap leading-tight">
+                    ⚡ 교대 필요
+                  </span>
+                )}
+                <span className="text-xl mt-1">{w.icon}</span>
+                <span className="text-[11px] font-semibold text-gray-600 text-center leading-tight">{zone}</span>
+                <span className="text-2xl font-black tabular-nums" style={{ color: textC }}>{w.score}</span>
+                <span className="text-[10px] text-gray-400">{w.status}</span>
+              </div>
+            );
+          })}
+        </div>
+        {/* 범례 */}
+        <div className="flex gap-4 mt-3 text-[11px] text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded" style={{ backgroundColor: "rgba(0,170,181,0.5)" }} />정상 (70 미만)</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded" style={{ backgroundColor: "rgba(249,157,27,0.6)" }} />휴식권장 (70–84)</span>
+          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded" style={{ backgroundColor: "rgba(239,68,68,0.55)" }} />교대권고 (85+) · 깜빡임</span>
+        </div>
       </div>
 
       {/* 메인: 직군 카드 + 알림 피드 */}

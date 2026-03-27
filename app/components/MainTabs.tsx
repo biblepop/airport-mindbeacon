@@ -14,9 +14,9 @@ import WorkerMonitor from "./WorkerMonitor";
 const TABS = [
   { id: "overview",  label: "개요",         icon: "🏠" },
   { id: "aicare",    label: "AI 케어 현황", icon: "🤖" },
+  { id: "workers",   label: "작업자 안전",  icon: "🛡️" },
   { id: "airport",   label: "공항 현황",    icon: "📊" },
   { id: "calmroom",  label: "심리안정실",   icon: "🧘" },
-  { id: "workers",   label: "작업자 안전",  icon: "🛡️" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];

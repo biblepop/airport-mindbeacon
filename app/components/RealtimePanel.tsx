@@ -289,26 +289,26 @@ export default function RealtimePanel() {
           })}
         </div>
         {/* x축 레이블 (2시간 간격, -45° 회전) */}
-        <div className="flex gap-0.5 w-full mt-1" style={{ height: 20 }}>
+        <div className="flex gap-0.5 w-full mt-1" style={{ height: 32 }}>
           {displayHourly.map((h, i) => {
             const hourNum = parseInt(h.hour.split(":")[0], 10);
             const showLabel = hourNum % 2 === 0;
             return (
-              <div key={i} className="flex-1 relative overflow-visible" style={{ height: 20 }}>
+              <div key={i} className="flex-1 relative overflow-visible" style={{ height: 32 }}>
                 {showLabel && (
                   <span
-                    className="absolute text-gray-400 tabular-nums select-none"
+                    className="absolute text-gray-500 tabular-nums select-none font-medium"
                     style={{
-                      fontSize: 7,
+                      fontSize: 11,
                       lineHeight: 1,
-                      top: 2,
+                      top: 4,
                       left: "50%",
                       transform: "translateX(-50%) rotate(-45deg)",
                       transformOrigin: "center top",
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {String(hourNum).padStart(2, "0")}
+                    {h.hour}
                   </span>
                 )}
               </div>

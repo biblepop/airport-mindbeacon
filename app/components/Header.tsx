@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import OnboardingModal from "./OnboardingModal";
 
 export default function Header() {
   const [time, setTime] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+
+    // 첫 접속 시 온보딩 팝업 표시
+    if (!localStorage.getItem("mindbeacon_onboarded")) {
+      setShowOnboarding(true);
+    }
+
     const update = () => {
       const now = new Date();
       const days = ["일", "월", "화", "수", "목", "금", "토"];
@@ -25,42 +33,67 @@ export default function Header() {
     return () => clearInterval(id);
   }, []);
 
-  return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <img
-            src="https://ko.wikipedia.org/wiki/Special:Redirect/file/Incheon_Airport_Logo.svg"
-            alt="인천국제공항"
-            height={28}
-            style={{ height: 28, flexShrink: 0 }}
-          />
-          <span className="text-gray-300 text-xl font-thin flex-shrink-0">|</span>
-          <span
-            className="font-bold text-base sm:text-lg tracking-tight whitespace-nowrap"
-            style={{ color: "#00AAB5" }}
-          >
-            AI 마음등대
-          </span>
-        </div>
+  function handleHelpClick() {
+    localStorage.removeItem("mindbeacon_onboarded");
+    setShowOnboarding(true);
+  }
 
-        {/* Right: LIVE + clock */}
-        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 ml-4 sm:ml-0">
-          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1">
-            <span
-              className="inline-block w-2 h-2 rounded-full animate-blink flex-shrink-0"
-              style={{ backgroundColor: "#F99D1B" }}
+  return (
+    <>
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <img
+              src="https://ko.wikipedia.org/wiki/Special:Redirect/file/Incheon_Airport_Logo.svg"
+              alt="인천국제공항"
+              height={28}
+              style={{ height: 28, flexShrink: 0 }}
             />
-            <span className="text-xs font-bold tracking-widest text-gray-500">
-              LIVE
+            <span className="text-gray-300 text-xl font-thin flex-shrink-0">|</span>
+            <span
+              className="font-bold text-base sm:text-lg tracking-tight whitespace-nowrap"
+              style={{ color: "#00AAB5" }}
+            >
+              AI 마음등대
             </span>
           </div>
-          <span className="hidden sm:block text-sm font-medium text-gray-600 tabular-nums">
-            {mounted ? time : ""}
-          </span>
+
+          {/* Right: ? 버튼 + LIVE + clock */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-4 sm:ml-0">
+            {/* 도움말 버튼 */}
+            <button
+              onClick={handleHelpClick}
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-bold border border-gray-200 text-gray-400 hover:border-[#00AAB5] hover:text-[#00AAB5] transition-colors flex-shrink-0"
+              aria-label="도움말"
+              title="도움말"
+            >
+              ?
+            </button>
+
+            {/* LIVE 배지 */}
+            <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1">
+              <span
+                className="inline-block w-2 h-2 rounded-full animate-blink flex-shrink-0"
+                style={{ backgroundColor: "#F99D1B" }}
+              />
+              <span className="text-xs font-bold tracking-widest text-gray-500">
+                LIVE
+              </span>
+            </div>
+
+            {/* 날짜/시간 (모바일 숨김) */}
+            <span className="hidden sm:block text-sm font-medium text-gray-600 tabular-nums">
+              {mounted ? time : ""}
+            </span>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
+    </>
   );
 }

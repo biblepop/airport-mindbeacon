@@ -270,26 +270,47 @@ export default function RealtimePanel() {
             <span className="text-xs text-gray-400">{todayStr} 기준</span>
           </div>
         </div>
-        <div className="flex items-end gap-1" style={{ height: 120 }}>
+        {/* 막대 */}
+        <div className="flex items-end gap-0.5 w-full" style={{ height: 88 }}>
           {displayHourly.map((h, i) => {
             const total = h.t1Passenger + h.t2Passenger;
             const pct = Math.round((total / maxPax) * 100);
+            return (
+              <div key={i} className="flex-1 flex items-end" style={{ height: "100%" }}>
+                <div
+                  className="w-full rounded-t-sm transition-all duration-300"
+                  style={{
+                    height: `${pct}%`,
+                    backgroundColor: pct > 70 ? "#ef4444" : pct > 40 ? "#F99D1B" : "#00AAB5",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+        {/* x축 레이블 (2시간 간격, -45° 회전) */}
+        <div className="flex gap-0.5 w-full mt-1" style={{ height: 20 }}>
+          {displayHourly.map((h, i) => {
             const hourNum = parseInt(h.hour.split(":")[0], 10);
             const showLabel = hourNum % 2 === 0;
             return (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex flex-col items-center justify-end" style={{ height: 96 }}>
-                  <div
-                    className="w-full rounded-t-sm transition-all duration-300"
+              <div key={i} className="flex-1 relative overflow-visible" style={{ height: 20 }}>
+                {showLabel && (
+                  <span
+                    className="absolute text-gray-400 tabular-nums select-none"
                     style={{
-                      height: `${pct}%`,
-                      backgroundColor: pct > 70 ? "#ef4444" : pct > 40 ? "#F99D1B" : "#00AAB5",
+                      fontSize: 7,
+                      lineHeight: 1,
+                      top: 2,
+                      left: "50%",
+                      transform: "translateX(-50%) rotate(-45deg)",
+                      transformOrigin: "center top",
+                      whiteSpace: "nowrap",
                     }}
-                  />
-                </div>
-                <span className="text-[8px] text-gray-400 tabular-nums leading-none">
-                  {showLabel ? h.hour.replace(":00", "") : ""}
-                </span>
+                  >
+                    {String(hourNum).padStart(2, "0")}
+                  </span>
+                )}
               </div>
             );
           })}

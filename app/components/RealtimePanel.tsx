@@ -288,28 +288,26 @@ export default function RealtimePanel() {
             );
           })}
         </div>
-        {/* x축 레이블 (2시간 간격, -45° 회전) */}
-        <div className="flex gap-0.5 w-full mt-1" style={{ height: 32 }}>
+        {/* x축 레이블 (2시간 간격, 수평) */}
+        <div className="flex gap-0.5 w-full mt-2">
           {displayHourly.map((h, i) => {
             const hourNum = parseInt(h.hour.split(":")[0], 10);
             const showLabel = hourNum % 2 === 0;
             return (
-              <div key={i} className="flex-1 relative overflow-visible" style={{ height: 32 }}>
-                {showLabel && (
+              <div
+                key={i}
+                className="flex-1 flex items-center justify-center"
+                style={{ minWidth: 0 }}
+              >
+                {showLabel ? (
                   <span
-                    className="absolute text-gray-500 tabular-nums select-none font-medium"
-                    style={{
-                      fontSize: 11,
-                      lineHeight: 1,
-                      top: 4,
-                      left: "50%",
-                      transform: "translateX(-50%) rotate(-45deg)",
-                      transformOrigin: "center top",
-                      whiteSpace: "nowrap",
-                    }}
+                    className="text-gray-500 tabular-nums select-none font-medium block text-center"
+                    style={{ fontSize: 10, lineHeight: 1, whiteSpace: "nowrap" }}
                   >
                     {h.hour}
                   </span>
+                ) : (
+                  <span style={{ display: "block", height: 10 }} />
                 )}
               </div>
             );

@@ -304,25 +304,25 @@ export default function RealtimePanel() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
         {/* 탭 헤더 */}
-        <div className="flex border-b border-gray-100">
+        <div className="flex border-b border-gray-100 overflow-x-auto scrollbar-hide">
           {MAIN_TABS.map((tab) => {
             const active = mainTab === tab.key;
             return (
               <button
                 key={tab.key}
                 onClick={() => setMainTab(tab.key)}
-                className="flex-1 flex flex-col items-center py-3 px-2 transition-colors relative"
+                className="flex-1 flex flex-col items-center py-2.5 sm:py-3 px-2 transition-colors relative min-w-[80px] sm:min-w-0"
                 style={{
                   backgroundColor: active ? "rgba(0,170,181,0.05)" : "transparent",
                 }}
               >
                 <span
-                  className="text-sm font-bold"
+                  className="text-xs sm:text-sm font-bold whitespace-nowrap"
                   style={{ color: active ? "#00AAB5" : "#6b7280" }}
                 >
                   {tab.label}
                 </span>
-                <span className="text-[10px] mt-0.5" style={{ color: active ? "#00AAB5" : "#9ca3af" }}>
+                <span className="text-[9px] sm:text-[10px] mt-0.5 whitespace-nowrap" style={{ color: active ? "#00AAB5" : "#9ca3af" }}>
                   {tab.summary}
                 </span>
                 {active && (
@@ -346,7 +346,7 @@ export default function RealtimePanel() {
                 <h4 className="text-sm font-bold text-gray-700">출국장 대기 현황 (T1)</h4>
                 <SourceBadge isMock={isMockDep} />
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {displayDepT1.map((z, i) => <GateCard key={`dep-t1-${i}`} z={z} idx={i} />)}
               </div>
             </div>
@@ -380,9 +380,9 @@ export default function RealtimePanel() {
                   <ArrivalRow key={`arr-${arrTab}-${i}`} z={z} />
                 ))}
               </div>
-              <div className="flex gap-4 mt-3 text-xs text-gray-500">
+              <div className="flex flex-wrap gap-3 mt-3 text-xs text-gray-500">
                 {[{ label: "원활 (0–9분)", color: "#00AAB5" }, { label: "보통 (10–19분)", color: "#F99D1B" }, { label: "혼잡 (20분+)", color: "#ef4444" }].map((l) => (
-                  <span key={l.label} className="flex items-center gap-1.5">
+                  <span key={l.label} className="flex items-center gap-1.5 whitespace-nowrap">
                     <span className="w-2 h-2 rounded-sm inline-block flex-shrink-0" style={{ background: l.color }} />
                     {l.label}
                   </span>
@@ -401,7 +401,7 @@ export default function RealtimePanel() {
                   <SourceBadge isMock={isMockPark} />
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {displayParking.map((p, i) => (
                   <div
                     key={i}

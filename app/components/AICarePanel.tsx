@@ -606,41 +606,44 @@ export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void })
     <div className="flex flex-col gap-5">
 
       {/* ── 요약 카드 ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {[
           { icon:"👥", label:"현재 모니터링 인원", value:(totalPax > 0 ? totalPax : 303).toLocaleString(), unit:"명", sub:"T1·T2 출국장 합산", color:"#00AAB5" },
           { icon:"🔍", label:"AI 불안 감지 중",    value:monitoringPax, unit:"명",                        sub:"AI 비전 0.3% 감지율", color:"#5785C5" },
           { icon:"👮", label:"직원 현황",           value:`${staffOnDuty} / ${staffList.length}`, unit:"명", sub:"케어·이동 중", color:"#F99D1B" },
         ].map(c => (
-          <div key={c.label} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <div className="flex items-start justify-between mb-3">
+          <div key={c.label} className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm flex sm:block items-center gap-3">
+            <div className="hidden sm:flex items-start justify-between mb-3">
               <span className="text-2xl">{c.icon}</span>
               <span className="flex items-center gap-1 text-xs font-semibold" style={{ color:c.color }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-blink inline-block" style={{ backgroundColor:c.color }} />LIVE
               </span>
             </div>
-            <p className="text-sm text-gray-500 mb-1">{c.label}</p>
-            <div className="flex items-end gap-1">
-              <span className="text-3xl font-bold tabular-nums" style={{ color:c.color }}>{c.value}</span>
-              <span className="text-base text-gray-400 mb-0.5">{c.unit}</span>
+            <span className="sm:hidden text-2xl flex-shrink-0">{c.icon}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs sm:text-sm text-gray-500 mb-1 leading-tight">{c.label}</p>
+              <div className="flex items-end gap-1">
+                <span className="text-2xl sm:text-3xl font-bold tabular-nums" style={{ color:c.color }}>{c.value}</span>
+                <span className="text-sm sm:text-base text-gray-400 mb-0.5">{c.unit}</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">{c.sub}</p>
             </div>
-            <p className="text-xs text-gray-400 mt-1">{c.sub}</p>
           </div>
         ))}
       </div>
 
       {/* ── T1 터미널 플로어맵 ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
+        <div className="flex items-start sm:items-center justify-between mb-3 gap-2">
           <div>
-            <h3 className="font-bold text-gray-800">T1 터미널 플로어맵</h3>
+            <h3 className="font-bold text-gray-800 text-sm sm:text-base">T1 터미널 플로어맵</h3>
             <p className="text-xs text-gray-400 mt-0.5">게이트/직원 클릭 → 상세 · AI 피드 연동</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <div className="flex items-center gap-1">
               {staffList.map(s => (
                 <span key={s.id}
-                  className="w-2.5 h-2.5 rounded-full transition-colors duration-500"
+                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-colors duration-500"
                   style={{ backgroundColor: STAFF_COLOR[s.status] }}
                   title={`직원${s.id} ${s.status}`} />
               ))}
@@ -652,32 +655,36 @@ export default function AICarePanel({ onCalmRoom }: { onCalmRoom?: () => void })
             </span>
           </div>
         </div>
-        <TerminalFloorMap
-          gates={displayT1}
-          selectedGateId={selectedGate?.gateId ?? null}
-          onSelectGate={(g) => { setSelectedGate(g); setSelectedStaffId(null); }}
-          staffList={staffList}
-          selectedStaffId={selectedStaffId}
-          onSelectStaff={(id) => { setSelectedStaffId(id); setSelectedGate(null); }}
-        />
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: 340 }}>
+            <TerminalFloorMap
+              gates={displayT1}
+              selectedGateId={selectedGate?.gateId ?? null}
+              onSelectGate={(g) => { setSelectedGate(g); setSelectedStaffId(null); }}
+              staffList={staffList}
+              selectedStaffId={selectedStaffId}
+              onSelectStaff={(id) => { setSelectedStaffId(id); setSelectedGate(null); }}
+            />
+          </div>
+        </div>
         {selectedGate && <GateDetailCard gate={selectedGate} onClose={() => setSelectedGate(null)} />}
       </div>
 
       {/* ── 터미널 히트맵 ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-gray-800">터미널 히트맵</h3>
+          <h3 className="font-bold text-gray-800 text-sm sm:text-base">터미널 히트맵</h3>
           <span className="text-xs text-gray-400">waitTime 기준 실시간</span>
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {displayT1.map((g, i) => (
             <GateBlock key={`t1-${i}`} gate={g} isPulsing={gateStatus(g.waitTime) === "혼잡"} />
           ))}
         </div>
-        <div className="flex gap-4 mt-3 text-xs text-gray-500">
+        <div className="flex flex-wrap gap-2 sm:gap-4 mt-3 text-xs text-gray-500">
           {[{label:"원활 (0–9분)",color:"#00AAB5"},{label:"보통 (10–19분)",color:"#F99D1B"},{label:"혼잡 (20분+)",color:"#ef4444"}].map(l=>(
-            <span key={l.label} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{background:l.color}}/>{l.label}
+            <span key={l.label} className="flex items-center gap-1.5 whitespace-nowrap">
+              <span className="w-2.5 h-2.5 rounded-sm inline-block flex-shrink-0" style={{background:l.color}}/>{l.label}
             </span>
           ))}
         </div>

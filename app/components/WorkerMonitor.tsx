@@ -103,25 +103,26 @@ export default function WorkerMonitor() {
   const FEED_DOT: Record<FeedItem["type"], string> = { info: "#00AAB5", warn: "#F99D1B", danger: "#ef4444" };
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 pb-10">
+    <section className="max-w-screen-xl mx-auto px-3 sm:px-6 pb-10">
       {/* 헤더 */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-start sm:items-center justify-between mb-5 gap-2">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">작업자 심리안전 모니터링</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">작업자 심리안전 모니터링</h2>
           <p className="text-sm text-gray-500 mt-0.5">AI 기반 실시간 스트레스 감지 · 자동 개입 시스템</p>
         </div>
-        <span className="text-xs text-gray-400 flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: "#00AAB5" }} />
-          모든 데이터 익명 처리
+        <span className="text-xs text-gray-400 flex items-center gap-1 flex-shrink-0">
+          <span className="w-2 h-2 rounded-full inline-block flex-shrink-0" style={{ backgroundColor: "#00AAB5" }} />
+          <span className="hidden sm:inline">모든 데이터 익명 처리</span>
+          <span className="sm:hidden">익명 처리</span>
         </span>
       </div>
 
       {/* 상단 요약 카드 3개 */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
         {SUMMARY_CARDS.map((c) => (
           <div key={c.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
-            <span className="text-2xl">{c.icon}</span>
-            <div>
+            <span className="text-2xl flex-shrink-0">{c.icon}</span>
+            <div className="min-w-0">
               <div className="text-xs text-gray-500 leading-tight">{c.label}</div>
               {c.sub && <div className="text-[10px] text-gray-400">{c.sub}</div>}
               <div className="text-xl font-bold mt-0.5" style={{ color: c.color }}>{c.value}</div>
@@ -136,7 +137,7 @@ export default function WorkerMonitor() {
           <span className="text-sm font-bold text-gray-800">구역별 스트레스 히트맵</span>
           <span className="text-[11px] text-gray-400">3초마다 자동 갱신</span>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3">
           {ZONE_MAP.map(({ zone, workerIdx }) => {
             const w = workers[workerIdx];
             const isRed    = w.score >= 85;
@@ -152,30 +153,30 @@ export default function WorkerMonitor() {
               >
                 {/* 교대 필요 뱃지 */}
                 {isRed && (
-                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full whitespace-nowrap leading-tight">
-                    ⚡ 교대 필요
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold bg-red-500 text-white px-1 py-0.5 rounded-full whitespace-nowrap leading-tight">
+                    ⚡교대
                   </span>
                 )}
-                <span className="text-xl mt-1">{w.icon}</span>
-                <span className="text-[11px] font-semibold text-gray-600 text-center leading-tight">{zone}</span>
-                <span className="text-2xl font-black tabular-nums" style={{ color: textC }}>{w.score}</span>
-                <span className="text-[10px] text-gray-400">{w.status}</span>
+                <span className="text-lg sm:text-xl mt-1">{w.icon}</span>
+                <span className="text-[10px] sm:text-[11px] font-semibold text-gray-600 text-center leading-tight">{zone}</span>
+                <span className="text-xl sm:text-2xl font-black tabular-nums" style={{ color: textC }}>{w.score}</span>
+                <span className="text-[9px] sm:text-[10px] text-gray-400">{w.status}</span>
               </div>
             );
           })}
         </div>
         {/* 범례 */}
-        <div className="flex gap-4 mt-3 text-[11px] text-gray-500">
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded" style={{ backgroundColor: "rgba(0,170,181,0.5)" }} />정상 (70 미만)</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded" style={{ backgroundColor: "rgba(249,157,27,0.6)" }} />휴식권장 (70–84)</span>
-          <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded" style={{ backgroundColor: "rgba(239,68,68,0.55)" }} />교대권고 (85+) · 깜빡임</span>
+        <div className="flex flex-wrap gap-2 sm:gap-4 mt-3 text-[11px] text-gray-500">
+          <span className="flex items-center gap-1 whitespace-nowrap"><span className="w-2.5 h-2.5 rounded flex-shrink-0" style={{ backgroundColor: "rgba(0,170,181,0.5)" }} />정상 (70 미만)</span>
+          <span className="flex items-center gap-1 whitespace-nowrap"><span className="w-2.5 h-2.5 rounded flex-shrink-0" style={{ backgroundColor: "rgba(249,157,27,0.6)" }} />휴식권장 (70–84)</span>
+          <span className="flex items-center gap-1 whitespace-nowrap"><span className="w-2.5 h-2.5 rounded flex-shrink-0" style={{ backgroundColor: "rgba(239,68,68,0.55)" }} />교대권고 (85+) · 깜빡임</span>
         </div>
       </div>
 
       {/* 메인: 직군 카드 + 알림 피드 */}
-      <div className="flex gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         {/* 직군별 카드 */}
-        <div className="flex-1 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+        <div className="flex-1 bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm">
           <div className="grid md:grid-cols-2 gap-3">
             {workers.map((w) => {
               const cfg = STATUS_CONFIG[w.status];
@@ -185,13 +186,13 @@ export default function WorkerMonitor() {
                   className="rounded-xl p-4 border"
                   style={{ backgroundColor: cfg.bg, borderColor: `${cfg.color}25` }}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{w.icon}</span>
-                      <span className="text-sm font-semibold text-gray-700">{w.role}</span>
+                  <div className="flex items-center justify-between mb-2 gap-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg sm:text-xl flex-shrink-0">{w.icon}</span>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700 truncate">{w.role}</span>
                     </div>
                     <span
-                      className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
+                      className="text-[10px] sm:text-xs font-bold px-1.5 sm:px-2 py-0.5 rounded-full text-white flex-shrink-0"
                       style={{ backgroundColor: cfg.color }}
                     >
                       {w.status}
@@ -227,7 +228,7 @@ export default function WorkerMonitor() {
           </div>
 
           {/* 개인정보 안내 */}
-          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-4 text-xs text-gray-500">
+          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-4 text-xs text-gray-500">
             <span><span className="font-semibold text-gray-700">개인정보 보호:</span> 모든 데이터는 비식별화 처리 후 집계</span>
             <span><span className="font-semibold text-gray-700">자발적 동의:</span> 사전 동의한 직원에 한해 수집</span>
             <span><span className="font-semibold text-gray-700">데이터 보존:</span> 24시간 후 자동 삭제</span>
@@ -235,7 +236,7 @@ export default function WorkerMonitor() {
         </div>
 
         {/* 실시간 알림 피드 */}
-        <div className="w-72 flex-shrink-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col">
+        <div className="w-full md:w-72 md:flex-shrink-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col">
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-bold text-gray-800">실시간 알림 피드</span>
             <span className="flex items-center gap-1 text-[10px] text-gray-400">
@@ -264,9 +265,9 @@ export default function WorkerMonitor() {
       </div>
 
       {/* 하단 안전 효과 섹션 */}
-      <div className="mt-5 bg-gradient-to-r from-[#00AAB5]/10 to-[#6366f1]/10 rounded-2xl border border-[#00AAB5]/20 p-5">
+      <div className="mt-5 bg-gradient-to-r from-[#00AAB5]/10 to-[#6366f1]/10 rounded-2xl border border-[#00AAB5]/20 p-4 sm:p-5">
         <div className="text-sm font-bold text-gray-800 mb-3">AI 모니터링 도입 시 예상 효과</div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-white/70 rounded-xl p-4">
             <div className="text-xs text-gray-500 mb-1">인적 오류 감소율 목표</div>
             <div className="text-2xl font-bold text-[#00AAB5]">30%</div>

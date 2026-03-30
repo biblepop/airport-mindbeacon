@@ -28,18 +28,18 @@ export default function MainTabs() {
     <>
       {/* ── 탭 바 ── */}
       <div className="sticky top-[52px] z-40 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-screen-xl mx-auto px-4">
-          <nav className="flex overflow-x-auto scrollbar-hide gap-1" aria-label="메인 탭">
+        <div className="max-w-screen-xl mx-auto px-2 sm:px-4">
+          <nav className="flex overflow-x-auto scrollbar-hide gap-0.5 sm:gap-1" aria-label="메인 탭">
             {TABS.map((tab) => {
               const isActive = active === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActive(tab.id)}
-                  className="relative flex items-center gap-1.5 px-4 py-3.5 text-sm font-semibold whitespace-nowrap transition-colors duration-150 flex-shrink-0"
+                  className="relative flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-colors duration-150 flex-shrink-0"
                   style={{ color: isActive ? "#00AAB5" : "#6b7280" }}
                 >
-                  <span className="text-base leading-none">{tab.icon}</span>
+                  <span className="text-sm sm:text-base leading-none">{tab.icon}</span>
                   <span>{tab.label}</span>
                   <span
                     className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200"
@@ -67,9 +67,9 @@ export default function MainTabs() {
 
         {/* 2. AI 케어 현황 (핵심 탭) */}
         {active === "aicare" && (
-          <div className="animate-fadeIn px-6 py-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900">AI 케어 현황</h2>
+          <div className="animate-fadeIn px-3 sm:px-6 py-5 sm:py-8">
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">AI 케어 현황</h2>
               <p className="text-sm text-gray-500 mt-1">
                 AI가 먼저 찾아가는 능동형 심리안전 케어 · 실시간 모니터링
               </p>
@@ -80,9 +80,9 @@ export default function MainTabs() {
 
         {/* 3. 공항 현황 */}
         {active === "airport" && (
-          <div className="animate-fadeIn px-6 py-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900">공항 현황</h2>
+          <div className="animate-fadeIn px-3 sm:px-6 py-5 sm:py-8">
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">공항 현황</h2>
               <p className="text-sm text-gray-500 mt-1">
                 출국장 · 입국장 · 주차장 실시간 혼잡도
               </p>

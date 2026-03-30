@@ -1,7 +1,7 @@
 export default function CalmRoomSection() {
   return (
     <section
-      className="max-w-screen-xl mx-auto px-6 pb-8"
+      className="max-w-screen-xl mx-auto px-3 sm:px-6 pb-8"
     >
       <div className="flex items-center gap-2 mb-5">
         <h2 className="text-xl font-bold text-airport-black">
@@ -15,7 +15,7 @@ export default function CalmRoomSection() {
         </span>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 지도 SVG */}
         <div className="md:col-span-2 bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">

@@ -27,7 +27,7 @@ const steps = [
 
 export default function FlowSection() {
   return (
-    <section className="max-w-screen-xl mx-auto px-6 pb-8">
+    <section className="max-w-screen-xl mx-auto px-3 sm:px-6 pb-8">
       <h2 className="text-xl font-bold text-airport-black mb-5">AI 작동 흐름도</h2>
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <div className="flex flex-col md:flex-row items-center gap-4">

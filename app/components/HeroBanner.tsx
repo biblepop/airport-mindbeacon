@@ -1,7 +1,7 @@
 export default function HeroBanner() {
   return (
     <section
-      className="text-white py-14 px-6"
+      className="text-white py-10 sm:py-14 px-4 sm:px-6"
       style={{
         background: "linear-gradient(135deg, #00AAB5 0%, #0098a3 50%, #5785C5 100%)",
       }}
@@ -15,7 +15,7 @@ export default function HeroBanner() {
             PROACTIVE AI CARE
           </span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold leading-tight mb-3">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight mb-3">
           AI가 먼저 찾아가는,<br />
           세계 최초 능동형 심리안전 케어 시스템
         </h1>

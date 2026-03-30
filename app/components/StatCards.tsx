@@ -67,28 +67,28 @@ export default function StatCards() {
   ];
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <section className="max-w-screen-xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {cards.map((c) => (
           <div
             key={c.label}
-            className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow"
+            className="bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow"
           >
-            <div className="flex items-start justify-between mb-3">
-              <span className="text-2xl">{c.icon}</span>
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <span className="text-xl sm:text-2xl">{c.icon}</span>
               <span
-                className="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                className="text-[10px] sm:text-xs font-semibold px-1.5 sm:px-2 py-0.5 rounded-full text-white"
                 style={{ backgroundColor: c.color }}
               >
                 LIVE
               </span>
             </div>
-            <p className="text-sm text-gray-500 mb-1">{c.label}</p>
+            <p className="text-xs sm:text-sm text-gray-500 mb-1 leading-tight">{c.label}</p>
             <div className="flex items-end gap-1">
-              <span className="text-3xl font-bold tabular-nums" style={{ color: c.color }}>
+              <span className="text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: c.color }}>
                 {c.value}
               </span>
-              <span className="text-base text-gray-400 mb-0.5">{c.unit}</span>
+              <span className="text-sm sm:text-base text-gray-400 mb-0.5">{c.unit}</span>
             </div>
             <p className="text-xs mt-1 text-gray-400">{c.sub}</p>
           </div>

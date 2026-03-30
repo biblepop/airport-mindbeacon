@@ -1,6 +1,6 @@
 export default function ComparisonSection() {
   return (
-    <section className="max-w-screen-xl mx-auto px-6 pb-8">
+    <section className="max-w-screen-xl mx-auto px-3 sm:px-6 pb-8">
       <h2 className="text-xl font-bold text-airport-black mb-5">
         기존 방식 vs AI 마음등대
       </h2>

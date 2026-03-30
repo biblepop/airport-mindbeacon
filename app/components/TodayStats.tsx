@@ -44,20 +44,20 @@ function todayLabel() {
 
 export default function TodayStats() {
   return (
-    <section className="max-w-screen-xl mx-auto px-6 pb-8">
-      <div className="flex items-center justify-between mb-5">
+    <section className="max-w-screen-xl mx-auto px-3 sm:px-6 pb-8">
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
         <h2 className="text-xl font-bold text-airport-black">오늘의 통계</h2>
         <span className="text-sm text-gray-400 font-medium">{todayLabel()}</span>
       </div>
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-gray-100">
           {stats.map((s) => (
-            <div key={s.label} className="p-6 flex flex-col items-center text-center">
-              <span className="text-2xl mb-2">{s.icon}</span>
-              <div className="text-sm text-gray-500 mb-1">{s.label}</div>
+            <div key={s.label} className="p-4 sm:p-6 flex flex-col items-center text-center">
+              <span className="text-xl sm:text-2xl mb-1 sm:mb-2">{s.icon}</span>
+              <div className="text-xs sm:text-sm text-gray-500 mb-1 leading-tight">{s.label}</div>
               <div className="flex items-end gap-1">
                 <span
-                  className="text-4xl font-bold tabular-nums"
+                  className="text-3xl sm:text-4xl font-bold tabular-nums"
                   style={{ color: s.color }}
                 >
                   {s.value}

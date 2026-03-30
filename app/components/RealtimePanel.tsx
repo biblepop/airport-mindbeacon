@@ -274,6 +274,8 @@ export default function RealtimePanel() {
           {displayHourly.map((h, i) => {
             const total = h.t1Passenger + h.t2Passenger;
             const pct = Math.round((total / maxPax) * 100);
+            const hourNum = parseInt(h.hour.split(":")[0], 10);
+            const showLabel = hourNum % 2 === 0;
             return (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
                 <div className="w-full flex flex-col items-center justify-end" style={{ height: 96 }}>
@@ -285,7 +287,9 @@ export default function RealtimePanel() {
                     }}
                   />
                 </div>
-                <span className="text-[8px] text-gray-400 tabular-nums leading-none">{h.hour}</span>
+                <span className="text-[8px] text-gray-400 tabular-nums leading-none">
+                  {showLabel ? h.hour.replace(":00", "") : ""}
+                </span>
               </div>
             );
           })}

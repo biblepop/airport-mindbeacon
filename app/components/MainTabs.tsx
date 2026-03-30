@@ -12,11 +12,11 @@ import CalmRoomSection from "./CalmRoomSection";
 import WorkerMonitor from "./WorkerMonitor";
 
 const TABS = [
-  { id: "overview",  label: "개요",         icon: "🏠" },
-  { id: "aicare",    label: "AI 케어 현황", icon: "🤖" },
-  { id: "workers",   label: "작업자 안전",  icon: "🛡️" },
-  { id: "airport",   label: "공항 현황",    icon: "📊" },
-  { id: "calmroom",  label: "심리안정실",   icon: "🧘" },
+  { id: "overview",  label: "개요",         shortLabel: "개요",    icon: "🏠" },
+  { id: "aicare",    label: "AI 케어 현황", shortLabel: "AI 케어", icon: "🤖" },
+  { id: "workers",   label: "작업자 안전",  shortLabel: "작업자",  icon: "🛡️" },
+  { id: "airport",   label: "공항 현황",    shortLabel: "공항",    icon: "📊" },
+  { id: "calmroom",  label: "심리안정실",   shortLabel: "심리안정실", icon: "🧘" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -40,7 +40,8 @@ export default function MainTabs() {
                   style={{ color: isActive ? "#00AAB5" : "#6b7280" }}
                 >
                   <span className="text-sm sm:text-base leading-none">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="sm:hidden">{tab.shortLabel}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                   <span
                     className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full transition-all duration-200"
                     style={{ backgroundColor: isActive ? "#00AAB5" : "transparent" }}

@@ -46,8 +46,8 @@ export default function Header() {
         </div>
 
         {/* Right: LIVE + clock */}
-        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-          <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 ml-4 sm:ml-0">
+          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1">
             <span
               className="inline-block w-2 h-2 rounded-full animate-blink flex-shrink-0"
               style={{ backgroundColor: "#F99D1B" }}
